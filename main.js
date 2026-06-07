@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initSidebarHighlight();
     initMagneticCards();
     initGlitchSectionNums();
+    initGBTrainer();
+    initBattleFlash();
 });
 
 /* ============================================================
@@ -438,6 +440,134 @@ function initSidebarHighlight() {
             });
         });
     }, { threshold: 0.35, rootMargin: '-5% 0px -55% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+}
+
+/* ============================================================
+   GAMEBOY TRAINER SPRITE — walks across screen on scroll
+   ============================================================ */
+function initGBTrainer() {
+    const wrap = document.createElement('div');
+    wrap.id = 'gb-trainer';
+    document.body.appendChild(wrap);
+
+    const SCALE = 4;
+    const W = 10, H = 16;
+    const canvas = document.createElement('canvas');
+    canvas.width  = W * SCALE;
+    canvas.height = H * SCALE;
+    wrap.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+    /* GB palette indices → colors */
+    const PAL = ['rgba(0,0,0,0)', '#182838', '#486880', '#98b8c8', '#e8f0f0'];
+    /*            0=transparent   1=darkest   2=dark     3=light    4=lightest */
+
+    /* 10×16 sprite frames: walk A and walk B */
+    const FRAME_A = [
+        [0,0,1,1,1,1,0,0,0,0],
+        [0,0,1,2,2,1,0,0,0,0],
+        [0,0,1,2,2,1,0,0,0,0],
+        [0,0,1,1,1,1,0,0,0,0],
+        [0,1,2,1,1,2,1,0,0,0],
+        [0,1,1,1,1,1,1,0,0,0],
+        [1,1,3,3,3,3,1,1,0,0],
+        [1,1,3,3,3,3,1,1,0,0],
+        [0,1,3,3,3,3,1,0,0,0],
+        [0,1,1,3,3,1,1,0,0,0],
+        [0,0,1,3,3,1,0,0,0,0],
+        [0,0,1,3,3,1,0,0,0,0],
+        [0,0,1,1,0,1,1,0,0,0],
+        [0,1,1,0,0,0,1,1,0,0],
+        [0,1,0,0,0,0,0,1,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+    ];
+    const FRAME_B = [
+        [0,0,1,1,1,1,0,0,0,0],
+        [0,0,1,2,2,1,0,0,0,0],
+        [0,0,1,2,2,1,0,0,0,0],
+        [0,0,1,1,1,1,0,0,0,0],
+        [0,1,2,1,1,2,1,0,0,0],
+        [0,1,1,1,1,1,1,0,0,0],
+        [1,1,3,3,3,3,1,1,0,0],
+        [1,1,3,3,3,3,1,1,0,0],
+        [0,1,3,3,3,3,1,0,0,0],
+        [0,1,1,3,3,1,1,0,0,0],
+        [0,0,1,3,3,1,0,0,0,0],
+        [0,0,1,3,3,1,0,0,0,0],
+        [0,1,1,0,0,1,1,0,0,0],
+        [0,1,0,0,0,0,1,1,0,0],
+        [0,0,0,0,0,0,1,1,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+    ];
+
+    function drawFrame(frame) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let row = 0; row < H; row++) {
+            for (let col = 0; col < W; col++) {
+                const v = frame[row][col];
+                if (v === 0) continue;
+                ctx.fillStyle = PAL[v];
+                ctx.fillRect(col * SCALE, row * SCALE, SCALE, SCALE);
+            }
+        }
+    }
+
+    let frame = 0;
+    let posX = -50;
+    let lastScroll = window.scrollY;
+    let animFrame = 0;
+    let walking = false;
+    let frameTimer = 0;
+
+    drawFrame(FRAME_A);
+
+    function update() {
+        const scrollY = window.scrollY;
+        const delta = scrollY - lastScroll;
+        lastScroll = scrollY;
+
+        if (Math.abs(delta) > 0.5) {
+            walking = true;
+            const dir = delta > 0 ? 1 : -1;
+            posX += dir * Math.min(Math.abs(delta) * 0.4, 8);
+            posX = Math.max(-20, Math.min(window.innerWidth - W * SCALE + 20, posX));
+
+            frameTimer++;
+            if (frameTimer > 6) {
+                frame = frame === 0 ? 1 : 0;
+                frameTimer = 0;
+                drawFrame(frame === 0 ? FRAME_A : FRAME_B);
+            }
+        } else {
+            walking = false;
+            if (frame !== 0) { frame = 0; drawFrame(FRAME_A); }
+        }
+
+        wrap.style.transform = `translateX(${posX}px)`;
+        animFrame = requestAnimationFrame(update);
+    }
+    update();
+}
+
+/* ============================================================
+   BATTLE FLASH on section entry
+   ============================================================ */
+function initBattleFlash() {
+    const sections = document.querySelectorAll('.section-panel');
+    let flashed = new Set();
+
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !flashed.has(entry.target)) {
+                flashed.add(entry.target);
+                entry.target.classList.add('battle-flash');
+                setTimeout(() => entry.target.classList.remove('battle-flash'), 600);
+            }
+        });
+    }, { threshold: 0.25 });
 
     sections.forEach(s => observer.observe(s));
 }
