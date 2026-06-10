@@ -26,6 +26,7 @@ function initTitleScreen() {
     if (!screen) return;
 
     const stopStars = initTitleStars();
+    drawTitleSprite();
 
     function dismiss() {
         screen.classList.add('fade-out');
@@ -90,51 +91,36 @@ function initTitleStars() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         time += 0.018;
 
-        /* nebula glow */
-        const grad = ctx.createRadialGradient(
-            canvas.width * 0.5, canvas.height * 0.45, 0,
-            canvas.width * 0.5, canvas.height * 0.45, canvas.width * 0.55
-        );
-        grad.addColorStop(0,   'rgba(20, 30, 80, 0.45)');
-        grad.addColorStop(0.5, 'rgba(10, 10, 40, 0.2)');
-        grad.addColorStop(1,   'rgba(0,0,0,0)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        /* stars */
+        /* GB-style pixel stars — dark squares on light background */
         for (const s of stars) {
             const pulse = Math.sin(time * s.speed + s.phase);
-            const alpha = s.base * (0.5 + 0.5 * pulse);
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-            if (s.gold)       ctx.fillStyle = `rgba(255,220,120,${alpha})`;
-            else if (s.blue)  ctx.fillStyle = `rgba(160,200,255,${alpha})`;
-            else               ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-            ctx.fill();
+            const alpha = s.base * (0.4 + 0.6 * pulse);
+            if (alpha < 0.15) continue;
+            const px = Math.floor(s.x / 4) * 4;
+            const py = Math.floor(s.y / 4) * 4;
+            const size = s.r > 1.2 ? 4 : 2;
+            ctx.fillStyle = s.blue
+                ? `rgba(72,104,128,${alpha * 0.5})`
+                : `rgba(24,40,56,${alpha * 0.4})`;
+            ctx.fillRect(px, py, size, size);
         }
 
-        /* shooting stars */
+        /* shooting stars — pixel trail */
         for (let i = shooters.length - 1; i >= 0; i--) {
             const s = shooters[i];
-            const tailX = s.x - s.vx * (s.len / (canvas.width / 48));
-            const tailY = s.y - s.vy * (s.len / (canvas.width / 48));
-            const grad2 = ctx.createLinearGradient(tailX, tailY, s.x, s.y);
-            grad2.addColorStop(0, `rgba(255,255,255,0)`);
-            grad2.addColorStop(1, `rgba(200,220,255,${s.life * 0.85})`);
-            ctx.beginPath();
-            ctx.moveTo(tailX, tailY);
-            ctx.lineTo(s.x, s.y);
-            ctx.strokeStyle = grad2;
-            ctx.lineWidth = 1.5 * s.life;
-            ctx.stroke();
+            for (let t = 0; t < 6; t++) {
+                const tx = Math.floor((s.x - s.vx * t * 0.6) / 4) * 4;
+                const ty = Math.floor((s.y - s.vy * t * 0.6) / 4) * 4;
+                ctx.fillStyle = `rgba(24,40,56,${s.life * (1 - t / 6) * 0.6})`;
+                ctx.fillRect(tx, ty, 3, 3);
+            }
             s.x += s.vx;
             s.y += s.vy;
             s.life -= s.decay;
             if (s.life <= 0) shooters.splice(i, 1);
         }
 
-        /* random new shooter */
-        if (Math.random() < 0.008 && shooters.length < 4) spawnShooter();
+        if (Math.random() < 0.008 && shooters.length < 3) spawnShooter();
 
         animId = requestAnimationFrame(draw);
     }
@@ -145,6 +131,44 @@ function initTitleStars() {
     const onResize = () => resize();
     window.addEventListener('resize', onResize);
     return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', onResize); };
+}
+
+/* Big pixel trainer for title screen — Pokemon Blue style */
+function drawTitleSprite() {
+    const canvas = document.getElementById('title-sprite');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+    const PAL = ['rgba(0,0,0,0)', '#182838', '#486880', '#98b8c8'];
+    /* 16×16 trainer facing forward, GB style */
+    const S = [
+        [0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],
+        [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
+        [0,0,1,1,2,2,2,2,2,2,2,1,1,0,0,0],
+        [0,0,1,2,2,2,2,2,2,2,2,2,1,0,0,0],
+        [0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],
+        [0,0,1,3,3,1,3,3,3,1,3,3,1,0,0,0],
+        [0,0,1,3,1,1,3,3,3,1,1,3,1,0,0,0],
+        [0,0,0,1,3,3,3,3,3,3,3,1,0,0,0,0],
+        [0,0,0,1,3,1,1,1,1,1,3,1,0,0,0,0],
+        [0,0,1,1,1,2,2,2,2,2,1,1,1,0,0,0],
+        [0,1,3,1,2,2,2,2,2,2,2,1,3,1,0,0],
+        [0,1,3,1,2,2,2,2,2,2,2,1,3,1,0,0],
+        [0,0,1,1,2,2,2,2,2,2,2,1,1,0,0,0],
+        [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
+        [0,0,0,1,3,3,1,0,1,3,3,1,0,0,0,0],
+        [0,0,1,1,1,1,1,0,1,1,1,1,1,0,0,0],
+    ];
+
+    const cell = canvas.width / 16;
+    for (let r = 0; r < 16; r++) {
+        for (let c = 0; c < 16; c++) {
+            if (!S[r][c]) continue;
+            ctx.fillStyle = PAL[S[r][c]];
+            ctx.fillRect(c * cell, r * cell, cell, cell);
+        }
+    }
 }
 
 /* ============================================================
