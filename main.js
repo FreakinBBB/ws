@@ -1,326 +1,97 @@
 /**
  * Portfolio — Dr. Carugo
- * Space-themed interactivity: stars, shooting stars, comet cursor,
- * hero constellation canvas, magnetic hover, glitch reveals.
+ * Pokémon Blue title screen intro + warm minimal main site
+ * with bracket micro-interactions and pixel easter eggs.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     initTitleScreen();
     initTypingEffect();
-    initHeroCanvas();
-    initCometCursor();
     initScrollAnimations();
     initSmoothScroll();
-    initSidebarHighlight();
-    initMagneticCards();
-    initGlitchSectionNums();
+    initNavHighlight();
     initGBTrainer();
-    initBattleFlash();
 });
 
 /* ============================================================
-   TITLE SCREEN  — dark space with stars + shooting stars
+   PIXEL SPRITES — GB Blue palette
    ============================================================ */
-function initTitleScreen() {
-    const screen = document.getElementById('title-screen');
-    if (!screen) return;
+const GB_PAL = ['rgba(0,0,0,0)', '#1c2a54', '#3559a8', '#93a9d6'];
 
-    const stopStars = initTitleStars();
-    drawTitleSprite();
+/* 16×16 trainer facing forward */
+const TRAINER_SPRITE = [
+    [0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,1,1,2,2,2,2,2,2,2,1,1,0,0,0],
+    [0,0,1,2,2,2,2,2,2,2,2,2,1,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,1,3,3,1,3,3,3,1,3,3,1,0,0,0],
+    [0,0,1,3,1,1,3,3,3,1,1,3,1,0,0,0],
+    [0,0,0,1,3,3,3,3,3,3,3,1,0,0,0,0],
+    [0,0,0,1,3,1,1,1,1,1,3,1,0,0,0,0],
+    [0,0,1,1,1,2,2,2,2,2,1,1,1,0,0,0],
+    [0,1,3,1,2,2,2,2,2,2,2,1,3,1,0,0],
+    [0,1,3,1,2,2,2,2,2,2,2,1,3,1,0,0],
+    [0,0,1,1,2,2,2,2,2,2,2,1,1,0,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,1,3,3,1,0,1,3,3,1,0,0,0,0],
+    [0,0,1,1,1,1,1,0,1,1,1,1,1,0,0,0],
+];
 
-    function dismiss() {
-        screen.classList.add('fade-out');
-        setTimeout(() => {
-            screen.classList.add('hidden');
-            if (stopStars) stopStars();
-        }, 1100);
-    }
+/* 16×16 turtle buddy (Blue Version mascot vibes) */
+const BUDDY_SPRITE = [
+    [0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,1,2,2,2,2,2,1,0,0,0,0,0],
+    [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
+    [0,0,0,1,2,1,2,2,2,1,2,1,0,0,0,0],
+    [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
+    [0,0,0,0,1,2,2,1,1,2,1,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0],
+    [0,0,0,1,1,3,3,3,3,3,1,1,0,0,0,0],
+    [0,0,1,2,1,3,1,3,1,3,1,2,1,0,0,0],
+    [0,0,1,2,1,3,3,1,3,3,1,2,1,0,0,0],
+    [0,0,0,1,1,3,1,3,1,3,1,1,0,0,0,0],
+    [0,0,0,0,1,3,3,3,3,3,1,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],
+    [0,0,0,1,2,2,1,0,1,2,2,1,0,0,0,0],
+    [0,0,0,1,2,2,1,0,1,2,2,1,0,0,0,0],
+    [0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0],
+];
 
-    screen.addEventListener('click', dismiss, { once: true });
-    document.addEventListener('keydown', dismiss, { once: true });
-}
-
-function initTitleStars() {
-    const canvas = document.getElementById('star-canvas');
-    if (!canvas) return null;
-
-    const ctx = canvas.getContext('2d');
-    let stars = [];
-    let shooters = [];
-    let animId;
-    let time = 0;
-
-    function resize() {
-        canvas.width  = window.innerWidth;
-        canvas.height = window.innerHeight;
-        buildStars();
-    }
-
-    function buildStars() {
-        stars = [];
-        const count = Math.min(Math.floor((canvas.width * canvas.height) / 2200), 380);
-        for (let i = 0; i < count; i++) {
-            const big = Math.random() < 0.06;
-            stars.push({
-                x:     Math.random() * canvas.width,
-                y:     Math.random() * canvas.height,
-                r:     big ? Math.random() * 1.8 + 1 : Math.random() * 1.1 + 0.2,
-                base:  Math.random() * 0.7 + 0.25,
-                speed: Math.random() * 0.5 + 0.1,
-                phase: Math.random() * Math.PI * 2,
-                blue:  Math.random() < 0.3,
-                gold:  Math.random() < 0.06,
-            });
-        }
-    }
-
-    function spawnShooter() {
-        const angle = (Math.random() * 30 + 15) * (Math.PI / 180);
-        const startX = Math.random() * canvas.width * 0.7;
-        const startY = Math.random() * canvas.height * 0.4;
-        shooters.push({
-            x: startX, y: startY,
-            vx: Math.cos(angle) * (canvas.width / 48),
-            vy: Math.sin(angle) * (canvas.width / 48),
-            life: 1, decay: 0.025 + Math.random() * 0.02,
-            len: 80 + Math.random() * 120,
-        });
-    }
-
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        time += 0.018;
-
-        /* GB-style pixel stars — dark squares on light background */
-        for (const s of stars) {
-            const pulse = Math.sin(time * s.speed + s.phase);
-            const alpha = s.base * (0.4 + 0.6 * pulse);
-            if (alpha < 0.15) continue;
-            const px = Math.floor(s.x / 4) * 4;
-            const py = Math.floor(s.y / 4) * 4;
-            const size = s.r > 1.2 ? 4 : 2;
-            ctx.fillStyle = s.blue
-                ? `rgba(72,104,128,${alpha * 0.5})`
-                : `rgba(24,40,56,${alpha * 0.4})`;
-            ctx.fillRect(px, py, size, size);
-        }
-
-        /* shooting stars — pixel trail */
-        for (let i = shooters.length - 1; i >= 0; i--) {
-            const s = shooters[i];
-            for (let t = 0; t < 6; t++) {
-                const tx = Math.floor((s.x - s.vx * t * 0.6) / 4) * 4;
-                const ty = Math.floor((s.y - s.vy * t * 0.6) / 4) * 4;
-                ctx.fillStyle = `rgba(24,40,56,${s.life * (1 - t / 6) * 0.6})`;
-                ctx.fillRect(tx, ty, 3, 3);
-            }
-            s.x += s.vx;
-            s.y += s.vy;
-            s.life -= s.decay;
-            if (s.life <= 0) shooters.splice(i, 1);
-        }
-
-        if (Math.random() < 0.008 && shooters.length < 3) spawnShooter();
-
-        animId = requestAnimationFrame(draw);
-    }
-
-    resize();
-    draw();
-
-    const onResize = () => resize();
-    window.addEventListener('resize', onResize);
-    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', onResize); };
-}
-
-/* Big pixel trainer for title screen — Pokemon Blue style */
-function drawTitleSprite() {
-    const canvas = document.getElementById('title-sprite');
+function drawSprite(canvasId, sprite) {
+    const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
-
-    const PAL = ['rgba(0,0,0,0)', '#182838', '#486880', '#98b8c8'];
-    /* 16×16 trainer facing forward, GB style */
-    const S = [
-        [0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],
-        [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
-        [0,0,1,1,2,2,2,2,2,2,2,1,1,0,0,0],
-        [0,0,1,2,2,2,2,2,2,2,2,2,1,0,0,0],
-        [0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],
-        [0,0,1,3,3,1,3,3,3,1,3,3,1,0,0,0],
-        [0,0,1,3,1,1,3,3,3,1,1,3,1,0,0,0],
-        [0,0,0,1,3,3,3,3,3,3,3,1,0,0,0,0],
-        [0,0,0,1,3,1,1,1,1,1,3,1,0,0,0,0],
-        [0,0,1,1,1,2,2,2,2,2,1,1,1,0,0,0],
-        [0,1,3,1,2,2,2,2,2,2,2,1,3,1,0,0],
-        [0,1,3,1,2,2,2,2,2,2,2,1,3,1,0,0],
-        [0,0,1,1,2,2,2,2,2,2,2,1,1,0,0,0],
-        [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
-        [0,0,0,1,3,3,1,0,1,3,3,1,0,0,0,0],
-        [0,0,1,1,1,1,1,0,1,1,1,1,1,0,0,0],
-    ];
-
     const cell = canvas.width / 16;
     for (let r = 0; r < 16; r++) {
         for (let c = 0; c < 16; c++) {
-            if (!S[r][c]) continue;
-            ctx.fillStyle = PAL[S[r][c]];
+            if (!sprite[r][c]) continue;
+            ctx.fillStyle = GB_PAL[sprite[r][c]];
             ctx.fillRect(c * cell, r * cell, cell, cell);
         }
     }
 }
 
 /* ============================================================
-   HERO CANVAS — floating constellation with mouse parallax
+   TITLE SCREEN — Pokémon Blue
    ============================================================ */
-function initHeroCanvas() {
-    const canvas = document.getElementById('hero-canvas');
-    if (!canvas) return;
+function initTitleScreen() {
+    const screen = document.getElementById('title-screen');
+    if (!screen) return;
 
-    const ctx = canvas.getContext('2d');
-    let pts = [];
-    let mouse = { x: 0, y: 0 };
-    let animId;
-    let time = 0;
+    drawSprite('title-sprite', TRAINER_SPRITE);
+    drawSprite('title-sprite-buddy', BUDDY_SPRITE);
+    drawSprite('hero-sprite', BUDDY_SPRITE);
 
-    function resize() {
-        canvas.width  = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
-        buildPts();
+    function dismiss() {
+        screen.classList.add('fade-out');
+        document.body.classList.remove('title-locked');
+        setTimeout(() => screen.classList.add('hidden'), 950);
     }
 
-    function buildPts() {
-        pts = [];
-        const count = Math.floor((canvas.width * canvas.height) / 14000);
-        for (let i = 0; i < count; i++) {
-            pts.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                vx: (Math.random() - 0.5) * 0.18,
-                vy: (Math.random() - 0.5) * 0.18,
-                r:  Math.random() * 1.4 + 0.4,
-                phase: Math.random() * Math.PI * 2,
-            });
-        }
-    }
-
-    const hero = canvas.closest('.hero');
-    if (hero) {
-        hero.addEventListener('mousemove', e => {
-            const rect = hero.getBoundingClientRect();
-            mouse.x = e.clientX - rect.left;
-            mouse.y = e.clientY - rect.top;
-        }, { passive: true });
-    }
-
-    const LINK_DIST = 120;
-    const MOUSE_DIST = 160;
-
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        time += 0.012;
-
-        for (const p of pts) {
-            /* gentle mouse repulsion */
-            const dx = p.x - mouse.x;
-            const dy = p.y - mouse.y;
-            const d = Math.sqrt(dx * dx + dy * dy);
-            if (d < MOUSE_DIST) {
-                const f = (MOUSE_DIST - d) / MOUSE_DIST * 0.012;
-                p.vx += dx / d * f;
-                p.vy += dy / d * f;
-            }
-
-            p.vx *= 0.99;
-            p.vy *= 0.99;
-            p.x += p.vx;
-            p.y += p.vy;
-
-            if (p.x < 0) p.x = canvas.width;
-            if (p.x > canvas.width)  p.x = 0;
-            if (p.y < 0) p.y = canvas.height;
-            if (p.y > canvas.height) p.y = 0;
-
-            const alpha = 0.35 + 0.25 * Math.sin(time + p.phase);
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(29,58,95,${alpha})`;
-            ctx.fill();
-        }
-
-        /* constellation lines */
-        for (let i = 0; i < pts.length; i++) {
-            for (let j = i + 1; j < pts.length; j++) {
-                const dx = pts[i].x - pts[j].x;
-                const dy = pts[i].y - pts[j].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < LINK_DIST) {
-                    const alpha = (1 - dist / LINK_DIST) * 0.15;
-                    ctx.beginPath();
-                    ctx.moveTo(pts[i].x, pts[i].y);
-                    ctx.lineTo(pts[j].x, pts[j].y);
-                    ctx.strokeStyle = `rgba(29,58,95,${alpha})`;
-                    ctx.lineWidth = 0.8;
-                    ctx.stroke();
-                }
-            }
-        }
-
-        animId = requestAnimationFrame(draw);
-    }
-
-    resize();
-    draw();
-
-    window.addEventListener('resize', () => resize(), { passive: true });
-}
-
-/* ============================================================
-   COMET CURSOR TRAIL
-   ============================================================ */
-function initCometCursor() {
-    const colors = [
-        'rgba(100,160,255,0.85)',
-        'rgba(160,200,255,0.7)',
-        'rgba(200,220,255,0.5)',
-        'rgba(255,220,120,0.6)',
-        'rgba(29,58,95,0.9)',
-    ];
-
-    let lastX = 0, lastY = 0, ticking = false;
-
-    document.addEventListener('mousemove', e => {
-        const dx = e.clientX - lastX;
-        const dy = e.clientY - lastY;
-        const speed = Math.sqrt(dx * dx + dy * dy);
-        lastX = e.clientX;
-        lastY = e.clientY;
-
-        if (speed < 3) return;
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(() => {
-            const count = Math.min(Math.floor(speed / 6) + 1, 5);
-            for (let i = 0; i < count; i++) {
-                const el = document.createElement('div');
-                el.className = 'comet-particle';
-                const size = Math.random() * 6 + 2;
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                el.style.cssText = `
-                    left:${e.clientX + (Math.random()-0.5)*12}px;
-                    top:${e.clientY + (Math.random()-0.5)*12}px;
-                    width:${size}px;
-                    height:${size}px;
-                    background:${color};
-                    animation-duration:${0.4 + Math.random() * 0.4}s;
-                `;
-                document.body.appendChild(el);
-                el.addEventListener('animationend', () => el.remove());
-            }
-            ticking = false;
-        });
-    }, { passive: true });
+    screen.addEventListener('click', dismiss, { once: true });
+    document.addEventListener('keydown', dismiss, { once: true });
 }
 
 /* ============================================================
@@ -357,21 +128,21 @@ function initTypingEffect() {
 }
 
 /* ============================================================
-   SCROLL ANIMATIONS — nebula reveal
+   SCROLL REVEAL
    ============================================================ */
 function initScrollAnimations() {
     const targets = document.querySelectorAll(
-        '.about-row, .publication-card, .project-card, .contact-card, .cv-item, .section-header'
+        '.section-header, .about-card, .publication-card, .project-card, .cv-item, .cv-download, .contact-message, .contact-card, .group-label'
     );
 
-    targets.forEach(el => el.classList.add('nebula-reveal'));
+    targets.forEach(el => el.classList.add('reveal'));
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (!entry.isIntersecting) return;
-            const siblings = [...(entry.target.parentElement?.querySelectorAll('.nebula-reveal') || [])];
-            const idx = siblings.indexOf(entry.target);
-            entry.target.style.animationDelay = `${idx * 0.08}s`;
+            const siblings = [...(entry.target.parentElement?.querySelectorAll(':scope > .reveal') || [])];
+            const idx = Math.max(siblings.indexOf(entry.target), 0);
+            entry.target.style.transitionDelay = `${idx * 0.07}s`;
             entry.target.classList.add('visible');
             observer.unobserve(entry.target);
         });
@@ -381,86 +152,35 @@ function initScrollAnimations() {
 }
 
 /* ============================================================
-   MAGNETIC CARDS
-   ============================================================ */
-function initMagneticCards() {
-    const cards = document.querySelectorAll('.project-card, .contact-card');
-
-    cards.forEach(card => {
-        card.addEventListener('mousemove', e => {
-            const rect = card.getBoundingClientRect();
-            const cx = rect.left + rect.width  / 2;
-            const cy = rect.top  + rect.height / 2;
-            const dx = (e.clientX - cx) / rect.width  * 12;
-            const dy = (e.clientY - cy) / rect.height * 8;
-            card.style.transform = `translate(${dx * 0.5}px, ${dy * 0.5 - 6}px) rotateX(${-dy * 0.4}deg) rotateY(${dx * 0.4}deg)`;
-        }, { passive: true });
-
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = '';
-            card.style.transition = 'transform 0.55s cubic-bezier(0.175,0.885,0.32,1.275)';
-        });
-        card.addEventListener('mouseenter', () => {
-            card.style.transition = 'transform 0.18s ease';
-        });
-    });
-}
-
-/* ============================================================
-   GLITCH ON SECTION NUMBERS
-   ============================================================ */
-function initGlitchSectionNums() {
-    const nums = document.querySelectorAll('.section-num');
-    nums.forEach(el => {
-        el.setAttribute('data-text', el.textContent);
-        const observer = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) triggerGlitch(el);
-            });
-        }, { threshold: 0.5 });
-        observer.observe(el);
-    });
-
-    function triggerGlitch(el) {
-        el.classList.add('glitching');
-        setTimeout(() => el.classList.remove('glitching'), 400);
-    }
-}
-
-/* ============================================================
    SMOOTH SCROLL
    ============================================================ */
 function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(a => {
         a.addEventListener('click', e => {
-            e.preventDefault();
             const target = document.querySelector(a.getAttribute('href'));
-            if (target) {
-                window.scrollTo({
-                    top: target.getBoundingClientRect().top + window.pageYOffset - 70,
-                    behavior: 'smooth',
-                });
-            }
+            if (!target) return;
+            e.preventDefault();
+            window.scrollTo({
+                top: target.getBoundingClientRect().top + window.pageYOffset - 90,
+                behavior: 'smooth',
+            });
         });
     });
 }
 
 /* ============================================================
-   SIDEBAR HIGHLIGHT
+   NAV ACTIVE HIGHLIGHT
    ============================================================ */
-function initSidebarHighlight() {
-    const sections  = document.querySelectorAll('section[id]');
-    const sideLinks = document.querySelectorAll('.sidebar-nav a');
-    if (!sideLinks.length) return;
+function initNavHighlight() {
+    const sections = document.querySelectorAll('section[id]');
+    const links = document.querySelectorAll('.nav-links a');
+    if (!links.length) return;
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (!entry.isIntersecting) return;
-            sideLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href') === `#${entry.target.id}`) {
-                    link.classList.add('active');
-                }
+            links.forEach(link => {
+                link.classList.toggle('active', link.getAttribute('href') === `#${entry.target.id}`);
             });
         });
     }, { threshold: 0.35, rootMargin: '-5% 0px -55% 0px' });
@@ -469,7 +189,7 @@ function initSidebarHighlight() {
 }
 
 /* ============================================================
-   GAMEBOY TRAINER SPRITE — walks across screen on scroll
+   WALKING TRAINER — strolls along the bottom as you scroll
    ============================================================ */
 function initGBTrainer() {
     const wrap = document.createElement('div');
@@ -485,11 +205,8 @@ function initGBTrainer() {
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
-    /* GB palette indices → colors */
-    const PAL = ['rgba(0,0,0,0)', '#182838', '#486880', '#98b8c8', '#e8f0f0'];
-    /*            0=transparent   1=darkest   2=dark     3=light    4=lightest */
+    const PAL = ['rgba(0,0,0,0)', '#1c2a54', '#3559a8', '#93a9d6'];
 
-    /* 10×16 sprite frames: walk A and walk B */
     const FRAME_A = [
         [0,0,1,1,1,1,0,0,0,0],
         [0,0,1,2,2,1,0,0,0,0],
@@ -542,8 +259,6 @@ function initGBTrainer() {
     let frame = 0;
     let posX = -50;
     let lastScroll = window.scrollY;
-    let animFrame = 0;
-    let walking = false;
     let frameTimer = 0;
 
     drawFrame(FRAME_A);
@@ -554,7 +269,6 @@ function initGBTrainer() {
         lastScroll = scrollY;
 
         if (Math.abs(delta) > 0.5) {
-            walking = true;
             const dir = delta > 0 ? 1 : -1;
             posX += dir * Math.min(Math.abs(delta) * 0.4, 8);
             posX = Math.max(-20, Math.min(window.innerWidth - W * SCALE + 20, posX));
@@ -565,45 +279,13 @@ function initGBTrainer() {
                 frameTimer = 0;
                 drawFrame(frame === 0 ? FRAME_A : FRAME_B);
             }
-        } else {
-            walking = false;
-            if (frame !== 0) { frame = 0; drawFrame(FRAME_A); }
+        } else if (frame !== 0) {
+            frame = 0;
+            drawFrame(FRAME_A);
         }
 
         wrap.style.transform = `translateX(${posX}px)`;
-        animFrame = requestAnimationFrame(update);
+        requestAnimationFrame(update);
     }
     update();
 }
-
-/* ============================================================
-   BATTLE FLASH on section entry
-   ============================================================ */
-function initBattleFlash() {
-    const sections = document.querySelectorAll('.section-panel');
-    let flashed = new Set();
-
-    const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting && !flashed.has(entry.target)) {
-                flashed.add(entry.target);
-                entry.target.classList.add('battle-flash');
-                setTimeout(() => entry.target.classList.remove('battle-flash'), 600);
-            }
-        });
-    }, { threshold: 0.25 });
-
-    sections.forEach(s => observer.observe(s));
-}
-
-/* ============================================================
-   NAV SCROLL EFFECT
-   ============================================================ */
-window.addEventListener('scroll', () => {
-    const nav = document.querySelector('.nav');
-    if (nav) {
-        nav.style.borderBottomColor = window.scrollY > 60
-            ? 'rgba(0,0,0,0.1)'
-            : 'var(--text-faint)';
-    }
-}, { passive: true });
