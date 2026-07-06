@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollAnimations();
     initSmoothScroll();
     initNavHighlight();
-    initGBTrainer();
 });
 
 /* ============================================================
@@ -82,7 +81,6 @@ function initTitleScreen() {
 
     drawSprite('title-sprite', TRAINER_SPRITE);
     drawSprite('title-sprite-buddy', BUDDY_SPRITE);
-    drawSprite('hero-sprite', BUDDY_SPRITE);
 
     function dismiss() {
         screen.classList.add('fade-out');
@@ -186,106 +184,4 @@ function initNavHighlight() {
     }, { threshold: 0.35, rootMargin: '-5% 0px -55% 0px' });
 
     sections.forEach(s => observer.observe(s));
-}
-
-/* ============================================================
-   WALKING TRAINER — strolls along the bottom as you scroll
-   ============================================================ */
-function initGBTrainer() {
-    const wrap = document.createElement('div');
-    wrap.id = 'gb-trainer';
-    document.body.appendChild(wrap);
-
-    const SCALE = 4;
-    const W = 10, H = 16;
-    const canvas = document.createElement('canvas');
-    canvas.width  = W * SCALE;
-    canvas.height = H * SCALE;
-    wrap.appendChild(canvas);
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
-
-    const PAL = ['rgba(0,0,0,0)', '#1c2a54', '#3559a8', '#93a9d6'];
-
-    const FRAME_A = [
-        [0,0,1,1,1,1,0,0,0,0],
-        [0,0,1,2,2,1,0,0,0,0],
-        [0,0,1,2,2,1,0,0,0,0],
-        [0,0,1,1,1,1,0,0,0,0],
-        [0,1,2,1,1,2,1,0,0,0],
-        [0,1,1,1,1,1,1,0,0,0],
-        [1,1,3,3,3,3,1,1,0,0],
-        [1,1,3,3,3,3,1,1,0,0],
-        [0,1,3,3,3,3,1,0,0,0],
-        [0,1,1,3,3,1,1,0,0,0],
-        [0,0,1,3,3,1,0,0,0,0],
-        [0,0,1,3,3,1,0,0,0,0],
-        [0,0,1,1,0,1,1,0,0,0],
-        [0,1,1,0,0,0,1,1,0,0],
-        [0,1,0,0,0,0,0,1,0,0],
-        [0,0,0,0,0,0,0,0,0,0],
-    ];
-    const FRAME_B = [
-        [0,0,1,1,1,1,0,0,0,0],
-        [0,0,1,2,2,1,0,0,0,0],
-        [0,0,1,2,2,1,0,0,0,0],
-        [0,0,1,1,1,1,0,0,0,0],
-        [0,1,2,1,1,2,1,0,0,0],
-        [0,1,1,1,1,1,1,0,0,0],
-        [1,1,3,3,3,3,1,1,0,0],
-        [1,1,3,3,3,3,1,1,0,0],
-        [0,1,3,3,3,3,1,0,0,0],
-        [0,1,1,3,3,1,1,0,0,0],
-        [0,0,1,3,3,1,0,0,0,0],
-        [0,0,1,3,3,1,0,0,0,0],
-        [0,1,1,0,0,1,1,0,0,0],
-        [0,1,0,0,0,0,1,1,0,0],
-        [0,0,0,0,0,0,1,1,0,0],
-        [0,0,0,0,0,0,0,0,0,0],
-    ];
-
-    function drawFrame(frame) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let row = 0; row < H; row++) {
-            for (let col = 0; col < W; col++) {
-                const v = frame[row][col];
-                if (v === 0) continue;
-                ctx.fillStyle = PAL[v];
-                ctx.fillRect(col * SCALE, row * SCALE, SCALE, SCALE);
-            }
-        }
-    }
-
-    let frame = 0;
-    let posX = -50;
-    let lastScroll = window.scrollY;
-    let frameTimer = 0;
-
-    drawFrame(FRAME_A);
-
-    function update() {
-        const scrollY = window.scrollY;
-        const delta = scrollY - lastScroll;
-        lastScroll = scrollY;
-
-        if (Math.abs(delta) > 0.5) {
-            const dir = delta > 0 ? 1 : -1;
-            posX += dir * Math.min(Math.abs(delta) * 0.4, 8);
-            posX = Math.max(-20, Math.min(window.innerWidth - W * SCALE + 20, posX));
-
-            frameTimer++;
-            if (frameTimer > 6) {
-                frame = frame === 0 ? 1 : 0;
-                frameTimer = 0;
-                drawFrame(frame === 0 ? FRAME_A : FRAME_B);
-            }
-        } else if (frame !== 0) {
-            frame = 0;
-            drawFrame(FRAME_A);
-        }
-
-        wrap.style.transform = `translateX(${posX}px)`;
-        requestAnimationFrame(update);
-    }
-    update();
 }

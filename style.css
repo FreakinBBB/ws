@@ -368,22 +368,6 @@ body.title-locked { overflow: hidden; }
     flex-wrap: wrap;
 }
 
-#hero-sprite {
-    position: absolute;
-    bottom: 34px;
-    right: 42px;
-    width: 56px;
-    height: 56px;
-    image-rendering: pixelated;
-    opacity: 0.85;
-    z-index: 1;
-    animation: sprite-bob 2.2s steps(2) infinite;
-}
-@keyframes sprite-bob {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-6px); }
-}
-
 /* ============================================================
    MARQUEE
    ============================================================ */
@@ -440,6 +424,7 @@ body.title-locked { overflow: hidden; }
     line-height: 1;
     color: var(--ink);
 }
+.section-title em { font-style: italic; font-weight: 400; color: var(--blue); }
 
 .group-label {
     font-family: var(--font-pixel);
@@ -791,19 +776,34 @@ a.pub-link:hover { color: var(--blue); }
 }
 
 /* ============================================================
-   WALKING TRAINER (scroll easter egg)
+   3D SHOWCASE — interactive Game Boy (dollhouse style)
    ============================================================ */
-#gb-trainer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    z-index: 950;
-    pointer-events: none;
-    image-rendering: pixelated;
-    transform: translateX(-40px);
-    opacity: 0.9;
+.showcase { padding: 100px 40px; }
+.showcase-stage {
+    position: relative;
+    height: min(620px, 74vh);
+    border-radius: var(--radius);
+    background: radial-gradient(120% 120% at 50% 0%, var(--cream) 0%, var(--card) 55%, var(--bg-soft) 100%);
+    overflow: hidden;
+    cursor: grab;
+    touch-action: none;
 }
-#gb-trainer canvas { image-rendering: pixelated; display: block; }
+.showcase-stage:active { cursor: grabbing; }
+#gb3d-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+.showcase-hint {
+    font-family: var(--font-pixel);
+    font-size: 0.56rem;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 22px;
+}
 
 /* ============================================================
    REVEAL ANIMATION
@@ -844,6 +844,8 @@ a.pub-link:hover { color: var(--blue); }
     #hero-sprite { right: 20px; bottom: 22px; }
 
     .section { padding: 76px 24px; }
+    .showcase { padding: 70px 16px; }
+    .showcase-stage { height: 62vh; }
     .section-header { gap: 14px; margin-bottom: 44px; }
 
     .publication-card { flex-direction: column; gap: 10px; padding: 26px 18px; }
