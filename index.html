@@ -9,305 +9,311 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="title-locked">
 
-<!-- TITLE SCREEN -->
+    <!-- TITLE SCREEN — Pokémon Blue style -->
     <div id="title-screen">
-        <canvas id="star-canvas"></canvas>
-        <div class="title-moon"></div>
         <div class="title-content">
-            <h1 class="title-name">
-                <span class="title-line-1">DR. UMBERTO</span>
-                <span class="title-line-2">CARUGO</span>
-            </h1>
+            <p class="title-eyebrow">DR. UMBERTO</p>
+            <h1 class="title-logo">CARUGO<span class="title-tm">™</span></h1>
             <p class="title-version">◆ Blue Version ◆</p>
             <div class="title-sprite-row">
+                <canvas id="title-sprite-buddy" width="64" height="64"></canvas>
                 <canvas id="title-sprite" width="64" height="64"></canvas>
             </div>
             <p class="title-press-start">PRESS START</p>
-            <p class="title-year">©'26 CARUGO inc.</p>
+            <p class="title-year">©'95.'26 CARUGO inc.</p>
         </div>
     </div>
     <!-- /TITLE SCREEN -->
 
-    <!-- Page layout -->
-    <div class="page-layout">
+    <!-- Nav -->
+    <header class="nav">
+        <a href="#top" class="nav-brand">[ UC ]</a>
+        <nav class="nav-links">
+            <a href="#about" class="bracket-link">About</a>
+            <a href="#publications" class="bracket-link">Papers</a>
+            <a href="#projects" class="bracket-link">Projects</a>
+            <a href="#cv" class="bracket-link">CV</a>
+        </nav>
+        <a href="#contact" class="nav-cta">Get in touch</a>
+    </header>
 
-        <main class="main-col">
+    <main id="top">
 
-            <!-- Hero -->
-            <section class="hero">
-                <canvas id="hero-canvas"></canvas>
-                <div class="hero-content">
-                    <p class="hero-eyebrow">Child Neuropsychiatry · AI · Research</p>
-                    <h1 class="hero-title">DR.<br>UMBERTO CARUGO</h1>
-                    <div class="hero-typing-wrap">
-                        <span class="prompt">▶</span>
-                        <span id="heroTyping"></span>
-                        <span class="cursor">█</span>
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-blobs" aria-hidden="true">
+                <span class="blob blob-1"></span>
+                <span class="blob blob-2"></span>
+                <span class="blob blob-3"></span>
+            </div>
+            <div class="hero-content">
+                <p class="hero-eyebrow">[ CHILD NEUROPSYCHIATRY · AI · RESEARCH ]</p>
+                <h1 class="hero-title">Dr. Umberto<br><em>Carugo</em></h1>
+                <p class="hero-sub">Caring for developing brains by day, debugging models by night — building warmer, smarter healthcare.</p>
+                <div class="hero-typing-wrap">
+                    <span class="prompt">▶</span>
+                    <span id="heroTyping"></span>
+                    <span class="cursor">█</span>
+                </div>
+                <div class="hero-cta">
+                    <a href="#about" class="pill pill-dark">About me</a>
+                    <a href="#contact" class="pill pill-ghost">Get in touch</a>
+                </div>
+            </div>
+            <canvas id="hero-sprite" width="64" height="64" aria-hidden="true"></canvas>
+        </section>
+
+        <!-- Marquee -->
+        <div class="marquee" aria-hidden="true">
+            <div class="marquee-track">
+                <span>CHILD NEUROPSYCHIATRY ◆ AI IN MEDICINE ◆ RESEARCH ◆ PRESS START ◆ VR REHAB ◆ EXPLAINABLE AI ◆ </span><span>CHILD NEUROPSYCHIATRY ◆ AI IN MEDICINE ◆ RESEARCH ◆ PRESS START ◆ VR REHAB ◆ EXPLAINABLE AI ◆ </span>
+            </div>
+        </div>
+
+        <!-- About -->
+        <section id="about" class="section">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-chip">[ 01 ]</span>
+                    <h2 class="section-title">About</h2>
+                </div>
+                <div class="about-grid">
+                    <div class="about-card">
+                        <span class="card-dot" style="--dot: var(--blue)"></span>
+                        <span class="card-label">LV.29 · MEDIC</span>
+                        <h3>The Physician</h3>
+                        <p>
+                            Navigating the intricate pathways of the developing brain as a Resident in <strong>Children Neuropsychiatry</strong> at the University of Milan. I've honed my clinical instincts across major Italian pediatric centers—translating textbook neurology into real-world smiles.
+                        </p>
                     </div>
-                    <div class="hero-cta">
-                        <a href="#about" class="cta-link">About me</a>
-                        <a href="#contact" class="cta-link secondary">Get in touch</a>
+                    <div class="about-card">
+                        <span class="card-dot" style="--dot: var(--terra)"></span>
+                        <span class="card-label">TYPE: ELECTRIC</span>
+                        <h3>AI in Medicine</h3>
+                        <p>
+                            Because fixing bugs in code is slightly easier than fixing them in human DNA. I'm pursuing a Master's in <strong>Explainable AI in Healthcare</strong> (University of Pavia) and survived the CCAIM Clinical Summer School in Cambridge. Fluent in Python, R, Machine Learning, and translating geek-speak to doctors.
+                        </p>
+                    </div>
+                    <div class="about-card">
+                        <span class="card-dot" style="--dot: var(--sage)"></span>
+                        <span class="card-label">QUEST LOG</span>
+                        <h3>Research</h3>
+                        <p>
+                            From decoding epileptic encephalopathies to throwing kids into Virtual Reality (for science and neurorehabilitation, I promise). My research bridges AI diagnostics and clinical genetics, aiming to turn data into better clinical outcomes.
+                        </p>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- About -->
-            <section id="about" class="about section-panel">
-                <div class="container">
-                    <div class="section-header">
-                        <span class="section-num">01</span>
-                        <h2 class="section-title">About</h2>
+        <!-- Publications -->
+        <section id="publications" class="section section-alt">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-chip">[ 02 ]</span>
+                    <h2 class="section-title">Papers</h2>
+                </div>
+                <div class="publications-list">
+                    <article class="publication-card">
+                        <div class="pub-year">2026</div>
+                        <div class="pub-content">
+                            <h3>Refining Aicardi Syndrome Diagnostic Criteria: A Modified Delphi Study</h3>
+                            <p class="pub-authors">Masnada S; De Giorgis V; <strong>Carugo U</strong>; Bahi-Buisson N; Cavallin M; Corbett M; Formica M; Gecz J; Petros N; Perucca E; Pichiecchio A; Fusar Poli P; H. Sherr E; Van den Veyver IB; Zara F; Veggiotti P; Arzimanoglou A.</p>
+                            <p class="pub-journal">European Journal of Paediatric Neurology</p>
+                            <div class="pub-links">
+                                <a href="https://doi.org/10.1016/j.ejpn.2025.11.004" target="_blank" rel="noopener noreferrer" class="pub-link bracket-link">DOI</a>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="publication-card">
+                        <div class="pub-year">2025</div>
+                        <div class="pub-content">
+                            <h3>Toward guidelines for COL4A1 and COL4A2 related disorders</h3>
+                            <p class="pub-authors">Bonaventura E; Marelli D; <strong>Carugo U</strong>; Politano D; Spaccini L; Parazzini C; Orcesi S; Tonduti D.</p>
+                            <p class="pub-journal">Pediatric Neurology (Submitted)</p>
+                            <div class="pub-links">
+                                <span class="pub-link">In Review</span>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="publication-card">
+                        <div class="pub-year">2024</div>
+                        <div class="pub-content">
+                            <h3>VR Rehabilitation on Executive Functions in Children with DCD</h3>
+                            <p class="pub-authors"><strong>Carugo U</strong>; Purpura G; Di Giusto V; Cavalagli A; Zorzi CF; Marcialis C; Cavallini A.</p>
+                            <p class="pub-journal">Poster @ Fit4MedRob 2024, Rome</p>
+                            <div class="pub-links">
+                                <a href="Poster Carelab ENG final.pdf" download target="_blank" rel="noopener noreferrer" class="pub-link bracket-link">Poster</a>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="publication-card">
+                        <div class="pub-year">2024</div>
+                        <div class="pub-content">
+                            <h3>IOGIOCO: Social Robot for Intransitive Gestures in ASD Children</h3>
+                            <p class="pub-authors"><strong>Carugo U</strong>; Annunziata S; Santos L; Caglio A; Geminiani A; Morey J; Pedrocchi A; Cavallini A.</p>
+                            <p class="pub-journal">Poster @ Fit4MedRob 2024, Rome</p>
+                            <div class="pub-links">
+                                <a href="Poster NAO ENG.pdf" download target="_blank" rel="noopener noreferrer" class="pub-link bracket-link">Poster</a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects -->
+        <section id="projects" class="section">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-chip">[ 03 ]</span>
+                    <h2 class="section-title">Projects</h2>
+                </div>
+                <p class="group-label">▶ WORK PROJECTS</p>
+                <div class="projects-grid">
+                    <div class="project-card">
+                        <div class="project-blob" style="--proj: var(--blue)"></div>
+                        <h3>VR Neurorehabilitation</h3>
+                        <p>Virtual reality for executive-function rehabilitation in children with DCD.</p>
                     </div>
-                    <div class="about-rows">
-                        <div class="about-row">
-                            <div class="about-row-img" style="--row-color: #1d3a5f"></div>
-                            <div class="about-row-label">The Physician</div>
-                            <div class="about-row-body">
-                                <p>
-                                    Navigating the intricate pathways of the developing brain as a Resident in <strong>Children Neuropsychiatry</strong> at the University of Milan. I've honed my clinical instincts across major Italian pediatric centers—translating textbook neurology into real-world smiles.
-                                </p>
-                            </div>
-                        </div>
-                        <div class="about-row">
-                            <div class="about-row-img" style="--row-color: #3a6ea0"></div>
-                            <div class="about-row-label">AI in Medicine</div>
-                            <div class="about-row-body">
-                                <p>
-                                    Because fixing bugs in code is slightly easier than fixing them in human DNA. I'm pursuing a Master's in <strong>Explainable AI in Healthcare</strong> (University of Pavia) and survived the CCAIM Clinical Summer School in Cambridge. Fluent in Python, R, Machine Learning, and translating geek-speak to doctors.
-                                </p>
-                            </div>
-                        </div>
-                        <div class="about-row">
-                            <div class="about-row-img" style="--row-color: #b07010"></div>
-                            <div class="about-row-label">Research</div>
-                            <div class="about-row-body">
-                                <p>
-                                    From decoding epileptic encephalopathies to throwing kids into Virtual Reality (for science and neurorehabilitation, I promise). My research bridges AI diagnostics and clinical genetics, aiming to turn data into better clinical outcomes.
-                                </p>
-                            </div>
-                        </div>
+                    <div class="project-card">
+                        <div class="project-blob" style="--proj: var(--blue-deep)"></div>
+                        <h3>Digital Rey-Osterrieth</h3>
+                        <p>Validation study of a digital version of the Rey-Osterrieth Complex Figure comparing tablet- and paper-based administrations.</p>
+                    </div>
+                    <div class="project-card">
+                        <div class="project-blob" style="--proj: var(--sage)"></div>
+                        <h3>IOGIOCO</h3>
+                        <p>Social robot for intransitive gestures in children with Autism Spectrum Disorder.</p>
+                    </div>
+                    <div class="project-card">
+                        <div class="project-blob" style="--proj: var(--terra)"></div>
+                        <h3>Phase III Trial</h3>
+                        <p>Sub-investigator in a phase-III clinical trial. Visits, drug administration, monitoring.</p>
                     </div>
                 </div>
-            </section>
 
-            <!-- Publications -->
-            <section id="publications" class="publications section-panel">
-                <div class="container">
-                    <div class="section-header">
-                        <span class="section-num">02</span>
-                        <h2 class="section-title">Papers</h2>
-                    </div>
-                    <div class="publications-list">
-                        <article class="publication-card">
-                            <div class="pub-year">2026</div>
-                            <div class="pub-content">
-                                <h3>Refining Aicardi Syndrome Diagnostic Criteria: A Modified Delphi Study</h3>
-                                <p class="pub-authors">Masnada S; De Giorgis V; <strong>Carugo U</strong>; Bahi-Buisson N; Cavallin M; Corbett M; Formica M; Gecz J; Petros N; Perucca E; Pichiecchio A; Fusar Poli P; H. Sherr E; Van den Veyver IB; Zara F; Veggiotti P; Arzimanoglou A.</p>
-                                <p class="pub-journal">European Journal of Paediatric Neurology</p>
-                                <div class="pub-links">
-                                    <a href="https://doi.org/10.1016/j.ejpn.2025.11.004" target="_blank" rel="noopener noreferrer" class="pub-link">DOI</a>
-                                </div>
-                            </div>
-                        </article>
-                        <article class="publication-card">
-                            <div class="pub-year">2025</div>
-                            <div class="pub-content">
-                                <h3>Toward guidelines for COL4A1 and COL4A2 related disorders</h3>
-                                <p class="pub-authors">Bonaventura E; Marelli D; <strong>Carugo U</strong>; Politano D; Spaccini L; Parazzini C; Orcesi S; Tonduti D.</p>
-                                <p class="pub-journal">Pediatric Neurology (Submitted)</p>
-                                <div class="pub-links">
-                                    <span class="pub-link">In Review</span>
-                                </div>
-                            </div>
-                        </article>
-                        <article class="publication-card">
-                            <div class="pub-year">2024</div>
-                            <div class="pub-content">
-                                <h3>VR Rehabilitation on Executive Functions in Children with DCD</h3>
-                                <p class="pub-authors"><strong>Carugo U</strong>; Purpura G; Di Giusto V; Cavalagli A; Zorzi CF; Marcialis C; Cavallini A.</p>
-                                <p class="pub-journal">Poster @ Fit4MedRob 2024, Rome</p>
-                                <div class="pub-links">
-                                    <a href="Poster Carelab ENG final.pdf" download target="_blank" rel="noopener noreferrer" class="pub-link">Poster</a>
-                                </div>
-                            </div>
-                        </article>
-                        <article class="publication-card">
-                            <div class="pub-year">2024</div>
-                            <div class="pub-content">
-                                <h3>IOGIOCO: Social Robot for Intransitive Gestures in ASD Children</h3>
-                                <p class="pub-authors"><strong>Carugo U</strong>; Annunziata S; Santos L; Caglio A; Geminiani A; Morey J; Pedrocchi A; Cavallini A.</p>
-                                <p class="pub-journal">Poster @ Fit4MedRob 2024, Rome</p>
-                                <div class="pub-links">
-                                    <a href="Poster NAO ENG.pdf" download target="_blank" rel="noopener noreferrer" class="pub-link">Poster</a>
-                                </div>
-                            </div>
-                        </article>
+                <p class="group-label group-label-spaced">▶ PERSONAL PROJECTS</p>
+                <div class="projects-grid">
+                    <div class="project-card">
+                        <div class="project-blob" style="--proj: var(--plum)"></div>
+                        <h3>WHO-NPIA</h3>
+                        <p>A website map of Milan UONPIA (Child Neuropsychiatry Units).</p>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Projects -->
-            <section id="projects" class="projects section-panel">
-                <div class="container">
-                    <div class="section-header">
-                        <span class="section-num">03</span>
-                        <h2 class="section-title">Projects</h2>
+        <!-- CV -->
+        <section id="cv" class="section section-alt">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-chip">[ 04 ]</span>
+                    <h2 class="section-title">CV</h2>
+                </div>
+                <div class="cv-content">
+                    <div class="cv-timeline">
+                        <div class="cv-item">
+                            <div class="cv-date">2025–2026</div>
+                            <div class="cv-details">
+                                <h3>Master XAIM – Explainable AI in Healthcare</h3>
+                                <p>University of Pavia (+ Frankfurt, Hannover, Keele, Ljubljana)</p>
+                            </div>
+                        </div>
+                        <div class="cv-item">
+                            <div class="cv-date">2024</div>
+                            <div class="cv-details">
+                                <h3>CCAIM Clinical Summer School</h3>
+                                <p>University of Cambridge, Cambridge Center for AI in Medicine</p>
+                            </div>
+                        </div>
+                        <div class="cv-item">
+                            <div class="cv-date">2022–2026</div>
+                            <div class="cv-details">
+                                <h3>Specialization in Children Neuropsychiatry</h3>
+                                <p>University of Milan</p>
+                                <ul class="cv-sublist">
+                                    <li>ASST Santi Paolo e Carlo (Regional Epilepsy Centre)</li>
+                                    <li>E. Medea Scientific Institute IRCCS "La Nostra Famiglia"</li>
+                                    <li>Fondazione IRCCS Ca' Granda Ospedale Maggiore Policlinico</li>
+                                    <li>Fondazione Don Carlo Gnocchi IRCCS</li>
+                                    <li>Vittore Buzzi Children's Hospital</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="cv-item">
+                            <div class="cv-date">2021–2022</div>
+                            <div class="cv-details">
+                                <h3>Traineeship Clinical Genetics Lab</h3>
+                                <p>Erasmus University Medical Center, Rotterdam</p>
+                            </div>
+                        </div>
+                        <div class="cv-item">
+                            <div class="cv-date">2015–2021</div>
+                            <div class="cv-details">
+                                <h3>Degree in Medicine and Surgery</h3>
+                                <p>University of Pavia</p>
+                            </div>
+                        </div>
                     </div>
-                    <h3 style="margin-bottom:20px; font-family:var(--font-pixel); font-size:0.75rem; letter-spacing:0.04em; color:var(--gb-3); text-transform:uppercase;">▶ Work Projects</h3>
-                    <div class="projects-grid">
-                        <div class="project-card">
-                            <div class="project-img" style="--proj-color: #1d3a5f; --proj-color2: #2d5a8f"></div>
-                            <h3>VR Neurorehabilitation</h3>
-                            <p>Virtual reality for executive-function rehabilitation in children with DCD.</p>
-                        </div>
-                        <div class="project-card">
-                            <div class="project-img" style="--proj-color: #2d5a8f; --proj-color2: #3d7abf"></div>
-                            <h3>Digital Rey-Osterrieth</h3>
-                            <p>Validation study of a digital version of the Rey-Osterrieth Complex Figure comparing tablet- and paper-based administrations.</p>
-                        </div>
-                        <div class="project-card">
-                            <div class="project-img" style="--proj-color: #1a5c3a; --proj-color2: #2d8a5e"></div>
-                            <h3>IOGIOCO</h3>
-                            <p>Social robot for intransitive gestures in children with Autism Spectrum Disorder.</p>
-                        </div>
-                        <div class="project-card">
-                            <div class="project-img" style="--proj-color: #7a4a08; --proj-color2: #b07010"></div>
-                            <h3>Phase III Trial</h3>
-                            <p>Sub-investigator in a phase-III clinical trial. Visits, drug administration, monitoring.</p>
-                        </div>
-                    </div>
-
-                    <h3 style="margin-top:40px; margin-bottom:20px; font-family:var(--font-pixel); font-size:0.75rem; letter-spacing:0.04em; color:var(--gb-3); text-transform:uppercase;">▶ Personal Projects</h3>
-                    <div class="projects-grid">
-                        <div class="project-card">
-                            <div class="project-img" style="--proj-color: #5c1a3a; --proj-color2: #8a2d5e"></div>
-                            <h3>WHO-NPIA</h3>
-                            <p>A website map of Milan UONPIA (Child Neuropsychiatry Units).</p>
-                        </div>
+                    <div class="cv-download">
+                        <p>Want to see the boring, highly detailed specifics?</p>
+                        <a href="mailto:carugoumberto@gmail.com?subject=CV%20request" class="pill pill-dark">Ask for the full CV</a>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- CV -->
-            <section id="cv" class="cv-section section-panel">
-                <div class="container">
-                    <div class="section-header">
-                        <span class="section-num">04</span>
-                        <h2 class="section-title">CV</h2>
+        <!-- Contact -->
+        <section id="contact" class="section">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-chip">[ 05 ]</span>
+                    <h2 class="section-title">Contact</h2>
+                </div>
+                <div class="contact-content">
+                    <div class="contact-message">
+                        <p class="contact-intro">Let's build<br>something<br><em>meaningful.</em></p>
+                        <p class="contact-sub">Always open to discussing research collaborations, AI in medicine, or just sharing a good chess game.</p>
                     </div>
-                    <div class="cv-content">
-                        <div class="cv-timeline">
-                            <div class="cv-item">
-                                <div class="cv-date">2025–2026</div>
-                                <div class="cv-details">
-                                    <h3>Master XAIM – Explainable AI in Healthcare</h3>
-                                    <p>University of Pavia (+ Frankfurt, Hannover, Keele, Ljubljana)</p>
-                                </div>
-                            </div>
-                            <div class="cv-item">
-                                <div class="cv-date">2024</div>
-                                <div class="cv-details">
-                                    <h3>CCAIM Clinical Summer School</h3>
-                                    <p>University of Cambridge, Cambridge Center for AI in Medicine</p>
-                                </div>
-                            </div>
-                            <div class="cv-item">
-                                <div class="cv-date">2022–2026</div>
-                                <div class="cv-details">
-                                    <h3>Specialization in Children Neuropsychiatry</h3>
-                                    <p>University of Milan</p>
-                                    <ul style="font-size:0.85rem; color:var(--text-muted); padding-left:20px; margin-top:8px; list-style-type:disc; line-height:1.6;">
-                                        <li>ASST Santi Paolo e Carlo (Regional Epilepsy Centre)</li>
-                                        <li>E. Medea Scientific Institute IRCCS "La Nostra Famiglia"</li>
-                                        <li>Fondazione IRCCS Ca' Granda Ospedale Maggiore Policlinico</li>
-                                        <li>Fondazione Don Carlo Gnocchi IRCCS</li>
-                                        <li>Vittore Buzzi Children's Hospital</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="cv-item">
-                                <div class="cv-date">2021–2022</div>
-                                <div class="cv-details">
-                                    <h3>Traineeship Clinical Genetics Lab</h3>
-                                    <p>Erasmus University Medical Center, Rotterdam</p>
-                                </div>
-                            </div>
-                            <div class="cv-item">
-                                <div class="cv-date">2015–2021</div>
-                                <div class="cv-details">
-                                    <h3>Degree in Medicine and Surgery</h3>
-                                    <p>University of Pavia</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="cv-download">
-                            <p>Want to see the boring, highly detailed specifics?</p>
-                        </div>
+                    <div class="contact-links">
+                        <a href="mailto:carugoumberto@gmail.com" class="contact-card">
+                            <h3>Email</h3>
+                            <p>carugoumberto@gmail.com</p>
+                        </a>
+                        <a href="https://www.linkedin.com/in/umbertocarugo/" target="_blank" rel="noopener noreferrer" class="contact-card">
+                            <h3>LinkedIn</h3>
+                            <p>Connect & Network</p>
+                        </a>
+                        <a href="https://github.com/FreakinBBB" target="_blank" rel="noopener noreferrer" class="contact-card">
+                            <h3>GitHub</h3>
+                            <p>Explore my code</p>
+                        </a>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Contact -->
-            <section id="contact" class="contact section-panel">
-                <div class="container">
-                    <div class="section-header">
-                        <span class="section-num">05</span>
-                        <h2 class="section-title">Contact</h2>
-                    </div>
-                    <div class="contact-content">
-                        <div class="contact-message">
-                            <p class="contact-intro">Let's build<br>something<br>meaningful.</p>
-                            <p class="contact-sub">Always open to discussing research collaborations, AI in medicine, or just sharing a good chess game.</p>
-                        </div>
-                        <div class="contact-links">
-                            <a href="mailto:carugoumberto@gmail.com" class="contact-card email-card">
-                                <h3>Email</h3>
-                                <p>carugoumberto@gmail.com</p>
-                            </a>
-                            <a href="https://www.linkedin.com/in/umbertocarugo/" target="_blank" rel="noopener noreferrer" class="contact-card linkedin-card">
-                                <h3>LinkedIn</h3>
-                                <p>Connect & Network</p>
-                            </a>
-                            <a href="https://github.com/FreakinBBB" target="_blank" rel="noopener noreferrer" class="contact-card github-card">
-                                <h3>GitHub</h3>
-                                <p>Explore my code</p>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-        </main>
-
-        <!-- Right sidebar -->
-        <aside class="sidebar">
-            <ul class="sidebar-nav">
-                <li><a href="#about">About</a></li>
-                <li><a href="#publications">Papers</a></li>
-                <li><a href="#projects">Projects</a></li>
-                <li><a href="#cv">CV</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </aside>
-
-    </div>
-    <!-- /page-layout -->
+    </main>
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="footer-text">
-            <span style="display:block; margin-bottom:4px;">PS: I also run on coffee, chess ♟️, and basketball 🏀</span>
-        </div>
-        <div class="footer-copyright" style="text-align:right;">
-            © 2026 — All systems operational.<br>
-            All Rights Reserved.
+        <div class="footer-inner">
+            <span class="footer-brand">[ UC ]</span>
+            <div class="footer-text">
+                PS: I also run on coffee, chess ♟️, and basketball 🏀
+            </div>
+            <div class="footer-copyright">
+                © 2026 — ALL SYSTEMS OPERATIONAL.<br>
+                ALL RIGHTS RESERVED.
+            </div>
         </div>
     </footer>
 
