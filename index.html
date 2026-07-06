@@ -67,7 +67,6 @@
                     <a href="#contact" class="pill pill-ghost">Get in touch</a>
                 </div>
             </div>
-            <canvas id="hero-sprite" width="64" height="64" aria-hidden="true"></canvas>
         </section>
 
         <!-- Marquee -->
@@ -76,6 +75,20 @@
                 <span>CHILD NEUROPSYCHIATRY ◆ AI IN MEDICINE ◆ RESEARCH ◆ PRESS START ◆ VR REHAB ◆ EXPLAINABLE AI ◆ </span><span>CHILD NEUROPSYCHIATRY ◆ AI IN MEDICINE ◆ RESEARCH ◆ PRESS START ◆ VR REHAB ◆ EXPLAINABLE AI ◆ </span>
             </div>
         </div>
+
+        <!-- 3D Playground -->
+        <section id="playground" class="showcase">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-chip">[ ◆ ]</span>
+                    <h2 class="section-title">Take it for a <em>spin.</em></h2>
+                </div>
+                <div id="gb3d-stage" class="showcase-stage">
+                    <canvas id="gb3d-canvas"></canvas>
+                </div>
+                <p class="showcase-hint">[ DRAG TO ROTATE · SCROLL TO ZOOM ]</p>
+            </div>
+        </section>
 
         <!-- About -->
         <section id="about" class="section">
@@ -317,7 +330,11 @@
         </div>
     </footer>
 
+    <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.min.js" } }
+    </script>
     <script src="main.js"></script>
+    <script type="module" src="gameboy3d.js"></script>
 </body>
 
 </html>
