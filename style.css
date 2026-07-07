@@ -81,7 +81,12 @@ body.title-locked { overflow: hidden; }
     opacity: 0.06;
     pointer-events: none;
 }
-#title-screen.fade-out { opacity: 0; transform: scale(1.04); pointer-events: none; }
+#title-screen.fade-out {
+    opacity: 0;
+    transform: scale(7);
+    pointer-events: none;
+    transition: opacity 1s ease 0.15s, transform 1.25s cubic-bezier(0.5, 0, 0.15, 1);
+}
 #title-screen.hidden   { display: none; }
 
 .title-content {
@@ -130,22 +135,8 @@ body.title-locked { overflow: hidden; }
     color: var(--gb-ink);
     letter-spacing: 0.06em;
     margin-top: 26px;
-    margin-bottom: 34px;
+    margin-bottom: 70px;
 }
-.title-sprite-row {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 34px;
-    margin-bottom: 38px;
-}
-#title-sprite, #title-sprite-buddy {
-    image-rendering: pixelated;
-    width: 96px;
-    height: 96px;
-}
-#title-sprite-buddy { width: 80px; height: 80px; }
-
 .title-press-start {
     font-family: var(--font-pixel);
     font-size: 0.78rem;
@@ -153,7 +144,7 @@ body.title-locked { overflow: hidden; }
     letter-spacing: 0.1em;
     text-transform: uppercase;
     animation: press-blink 1.3s step-end infinite;
-    margin-bottom: 26px;
+    margin-bottom: 70px;
 }
 @keyframes press-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 .title-year {
@@ -267,56 +258,47 @@ body.title-locked { overflow: hidden; }
 .pill-ghost:hover { background: var(--ink); color: var(--cream); }
 
 /* ============================================================
+   FIXED 3D STAGE — Game Boy behind the whole page
+   ============================================================ */
+#gb3d-stage {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+#gb3d-canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+main { position: relative; z-index: 1; }
+
+/* ============================================================
    HERO
    ============================================================ */
 .hero {
     min-height: 100vh;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 140px 40px 90px;
+    justify-content: flex-start;
+    padding: 140px 40px 90px 8vw;
     position: relative;
-    overflow: hidden;
-    text-align: center;
+    text-align: left;
 }
 
-.hero-blobs { position: absolute; inset: 0; pointer-events: none; }
-.blob {
+.hero-content { max-width: 620px; position: relative; z-index: 1; }
+
+.scroll-hint {
     position: absolute;
-    border-radius: 62% 38% 55% 45% / 48% 60% 40% 52%;
-    filter: blur(2px);
-    opacity: 0.5;
-    animation: blob-float 14s ease-in-out infinite alternate;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-pixel);
+    font-size: 0.55rem;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+    animation: press-blink 1.6s step-end infinite;
 }
-.blob-1 {
-    width: 44vw; height: 44vw;
-    max-width: 560px; max-height: 560px;
-    background: var(--blue-light);
-    top: -12%; right: -10%;
-    opacity: 0.38;
-}
-.blob-2 {
-    width: 30vw; height: 30vw;
-    max-width: 380px; max-height: 380px;
-    background: var(--terra);
-    bottom: -8%; left: -8%;
-    opacity: 0.26;
-    animation-delay: -5s;
-}
-.blob-3 {
-    width: 20vw; height: 20vw;
-    max-width: 250px; max-height: 250px;
-    background: var(--sage);
-    top: 16%; left: 10%;
-    opacity: 0.3;
-    animation-delay: -9s;
-}
-@keyframes blob-float {
-    from { transform: translate(0, 0) rotate(0deg); }
-    to   { transform: translate(3%, 5%) rotate(10deg); }
-}
-
-.hero-content { max-width: 800px; position: relative; z-index: 1; }
 
 .hero-eyebrow {
     font-family: var(--font-pixel);
@@ -345,7 +327,7 @@ body.title-locked { overflow: hidden; }
     font-size: 1.15rem;
     color: var(--ink-soft);
     max-width: 540px;
-    margin: 0 auto 26px;
+    margin: 0 0 26px;
     line-height: 1.65;
 }
 
@@ -363,7 +345,7 @@ body.title-locked { overflow: hidden; }
 .hero-cta {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 18px;
     flex-wrap: wrap;
 }
@@ -377,6 +359,8 @@ body.title-locked { overflow: hidden; }
     border-bottom: 1px solid var(--line);
     background: var(--ink);
     padding: 16px 0;
+    position: relative;
+    z-index: 2;
 }
 .marquee-track {
     display: flex;
@@ -396,12 +380,25 @@ body.title-locked { overflow: hidden; }
 }
 
 /* ============================================================
-   SECTIONS
+   SECTIONS — floating panels over the 3D layer
    ============================================================ */
-.section { padding: 110px 40px; position: relative; }
-.section-alt { background: var(--bg-soft); }
+.section { padding: 28vh 40px; position: relative; }
+.section-alt { background: transparent; }
 
 .container { max-width: 1080px; margin: 0 auto; }
+
+.section > .container {
+    max-width: 800px;
+    background: rgba(244, 239, 234, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(15, 15, 15, 0.06);
+    border-radius: 28px;
+    padding: 64px 56px;
+    box-shadow: 0 30px 70px rgba(15, 15, 15, 0.12);
+}
+.panel-right > .container { margin-left: auto; margin-right: 3vw; }
+.panel-left  > .container { margin-right: auto; margin-left: 3vw; }
 
 .section-header {
     display: flex;
@@ -639,6 +636,8 @@ body.title-locked { overflow: hidden; }
     background: var(--ink);
     padding: 140px 40px;
     text-align: center;
+    position: relative;
+    z-index: 2;
 }
 .manifesto-line {
     font-family: var(--font-display);
@@ -752,8 +751,8 @@ a.pub-link:hover { color: var(--blue); }
    ============================================================ */
 .cv-content {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 64px;
+    grid-template-columns: 1fr;
+    gap: 40px;
     align-items: start;
 }
 .cv-timeline { display: flex; flex-direction: column; }
@@ -796,16 +795,17 @@ a.pub-link:hover { color: var(--blue); }
 }
 
 .cv-download {
-    padding: 42px 38px;
+    padding: 34px 38px;
     background: var(--card);
     border-radius: var(--radius);
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 26px;
-    position: sticky;
-    top: 110px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
 }
+.pill { white-space: nowrap; }
 .cv-download p {
     font-family: var(--font-display);
     font-size: 1.35rem;
@@ -881,10 +881,20 @@ a.pub-link:hover { color: var(--blue); }
    FOOTER
    ============================================================ */
 .footer {
-    background: var(--ink);
+    background: transparent;
     color: var(--cream);
-    padding: 90px 40px 54px;
+    padding: 55vh 40px 54px;
+    position: relative;
+    z-index: 1;
 }
+.footer-cta, .footer-inner {
+    background: rgba(15, 15, 15, 0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 28px;
+}
+.footer-cta { padding: 70px 40px; }
+.footer-inner { padding: 34px 40px; border-top: none; }
 .footer-cta {
     max-width: 1080px;
     margin: 0 auto 80px;
@@ -944,36 +954,6 @@ a.pub-link:hover { color: var(--blue); }
 }
 
 /* ============================================================
-   3D SHOWCASE — interactive Game Boy (dollhouse style)
-   ============================================================ */
-.showcase { padding: 100px 40px; }
-.showcase-stage {
-    position: relative;
-    height: min(620px, 74vh);
-    border-radius: var(--radius);
-    background: radial-gradient(120% 120% at 50% 0%, var(--cream) 0%, var(--card) 55%, var(--bg-soft) 100%);
-    overflow: hidden;
-    cursor: grab;
-    touch-action: none;
-}
-.showcase-stage:active { cursor: grabbing; }
-#gb3d-canvas {
-    position: absolute;
-    inset: 0;
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
-}
-.showcase-hint {
-    font-family: var(--font-pixel);
-    font-size: 0.56rem;
-    letter-spacing: 0.14em;
-    color: var(--muted);
-    text-align: center;
-    margin-top: 22px;
-}
-
-/* ============================================================
    REVEAL ANIMATION
    ============================================================ */
 .reveal {
@@ -1009,11 +989,10 @@ a.pub-link:hover { color: var(--blue); }
 
     .hero { padding: 120px 24px 70px; }
     .hero-sub { font-size: 1.02rem; }
-    #hero-sprite { right: 20px; bottom: 22px; }
 
-    .section { padding: 76px 24px; }
-    .showcase { padding: 70px 16px; }
-    .showcase-stage { height: 62vh; }
+    .section { padding: 18vh 16px; }
+    .section > .container { padding: 40px 26px; }
+    .panel-right > .container, .panel-left > .container { margin-left: 0; margin-right: 0; }
     .section-header { gap: 14px; margin-bottom: 44px; }
 
     .publication-card { flex-direction: column; gap: 10px; padding: 26px 18px; }
@@ -1035,7 +1014,4 @@ a.pub-link:hover { color: var(--blue); }
 }
 @media (max-width: 480px) {
     .title-logo { font-size: 2.3rem; }
-    .title-sprite-row { gap: 20px; }
-    #title-sprite { width: 72px; height: 72px; }
-    #title-sprite-buddy { width: 60px; height: 60px; }
 }

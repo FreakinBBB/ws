@@ -22,10 +22,6 @@
             <p class="title-eyebrow">DR. UMBERTO</p>
             <h1 class="title-logo">CARUGO<span class="title-tm">™</span></h1>
             <p class="title-version">◆ Blue Version ◆</p>
-            <div class="title-sprite-row">
-                <canvas id="title-sprite-buddy" width="64" height="64"></canvas>
-                <canvas id="title-sprite" width="64" height="64"></canvas>
-            </div>
             <p class="title-press-start">PRESS START</p>
             <p class="title-year">©'95.'26 CARUGO inc.</p>
         </div>
@@ -44,15 +40,15 @@
         <a href="#contact" class="nav-cta">Get in touch</a>
     </header>
 
+    <!-- Fixed 3D layer — the Game Boy lives behind the whole page -->
+    <div id="gb3d-stage" aria-hidden="true">
+        <canvas id="gb3d-canvas"></canvas>
+    </div>
+
     <main id="top">
 
         <!-- Hero -->
         <section class="hero">
-            <div class="hero-blobs" aria-hidden="true">
-                <span class="blob blob-1"></span>
-                <span class="blob blob-2"></span>
-                <span class="blob blob-3"></span>
-            </div>
             <div class="hero-content">
                 <p class="hero-eyebrow">[ CHILD NEUROPSYCHIATRY · AI · RESEARCH ]</p>
                 <h1 class="hero-title">Dr. Umberto<br><em>Carugo</em></h1>
@@ -67,6 +63,7 @@
                     <a href="#contact" class="pill pill-ghost">Get in touch</a>
                 </div>
             </div>
+            <p class="scroll-hint">[ SCROLL TO EXPLORE ]</p>
         </section>
 
         <!-- Marquee -->
@@ -76,22 +73,8 @@
             </div>
         </div>
 
-        <!-- 3D Playground -->
-        <section id="playground" class="showcase">
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-chip">[ ◆ ]</span>
-                    <h2 class="section-title">Take it for a <em>spin.</em></h2>
-                </div>
-                <div id="gb3d-stage" class="showcase-stage">
-                    <canvas id="gb3d-canvas"></canvas>
-                </div>
-                <p class="showcase-hint">[ DRAG TO ROTATE · SCROLL TO ZOOM ]</p>
-            </div>
-        </section>
-
         <!-- About -->
-        <section id="about" class="section">
+        <section id="about" class="section panel-right">
             <div class="container">
                 <div class="section-header">
                     <span class="section-chip">[ 01 ]</span>
@@ -151,7 +134,7 @@
         </section>
 
         <!-- A day, structured -->
-        <section id="day" class="section">
+        <section id="day" class="section panel-left">
             <div class="container">
                 <div class="section-header">
                     <span class="section-chip">[ ▷ ]</span>
@@ -198,7 +181,7 @@
         </section>
 
         <!-- Publications -->
-        <section id="publications" class="section section-alt">
+        <section id="publications" class="section panel-right">
             <div class="container">
                 <div class="section-header">
                     <span class="section-chip">[ 02 ]</span>
@@ -254,7 +237,7 @@
         </section>
 
         <!-- Projects -->
-        <section id="projects" class="section">
+        <section id="projects" class="section panel-left">
             <div class="container">
                 <div class="section-header">
                     <span class="section-chip">[ 03 ]</span>
@@ -296,7 +279,7 @@
         </section>
 
         <!-- CV -->
-        <section id="cv" class="section section-alt">
+        <section id="cv" class="section panel-right">
             <div class="container">
                 <div class="section-header">
                     <span class="section-chip">[ 04 ]</span>
@@ -365,7 +348,7 @@
         </section>
 
         <!-- Contact -->
-        <section id="contact" class="section">
+        <section id="contact" class="section panel-left">
             <div class="container">
                 <div class="section-header">
                     <span class="section-chip">[ 05 ]</span>
