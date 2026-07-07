@@ -13,79 +13,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ============================================================
-   PIXEL SPRITES — GB Blue palette
-   ============================================================ */
-const GB_PAL = ['rgba(0,0,0,0)', '#1c2a54', '#3559a8', '#93a9d6'];
-
-/* 16×16 trainer facing forward */
-const TRAINER_SPRITE = [
-    [0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],
-    [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
-    [0,0,1,1,2,2,2,2,2,2,2,1,1,0,0,0],
-    [0,0,1,2,2,2,2,2,2,2,2,2,1,0,0,0],
-    [0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],
-    [0,0,1,3,3,1,3,3,3,1,3,3,1,0,0,0],
-    [0,0,1,3,1,1,3,3,3,1,1,3,1,0,0,0],
-    [0,0,0,1,3,3,3,3,3,3,3,1,0,0,0,0],
-    [0,0,0,1,3,1,1,1,1,1,3,1,0,0,0,0],
-    [0,0,1,1,1,2,2,2,2,2,1,1,1,0,0,0],
-    [0,1,3,1,2,2,2,2,2,2,2,1,3,1,0,0],
-    [0,1,3,1,2,2,2,2,2,2,2,1,3,1,0,0],
-    [0,0,1,1,2,2,2,2,2,2,2,1,1,0,0,0],
-    [0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],
-    [0,0,0,1,3,3,1,0,1,3,3,1,0,0,0,0],
-    [0,0,1,1,1,1,1,0,1,1,1,1,1,0,0,0],
-];
-
-/* 16×16 turtle buddy (Blue Version mascot vibes) */
-const BUDDY_SPRITE = [
-    [0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0],
-    [0,0,0,0,1,2,2,2,2,2,1,0,0,0,0,0],
-    [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
-    [0,0,0,1,2,1,2,2,2,1,2,1,0,0,0,0],
-    [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
-    [0,0,0,0,1,2,2,1,1,2,1,0,0,0,0,0],
-    [0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0],
-    [0,0,0,1,1,3,3,3,3,3,1,1,0,0,0,0],
-    [0,0,1,2,1,3,1,3,1,3,1,2,1,0,0,0],
-    [0,0,1,2,1,3,3,1,3,3,1,2,1,0,0,0],
-    [0,0,0,1,1,3,1,3,1,3,1,1,0,0,0,0],
-    [0,0,0,0,1,3,3,3,3,3,1,0,0,0,0,0],
-    [0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],
-    [0,0,0,1,2,2,1,0,1,2,2,1,0,0,0,0],
-    [0,0,0,1,2,2,1,0,1,2,2,1,0,0,0,0],
-    [0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0],
-];
-
-function drawSprite(canvasId, sprite) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
-    const cell = canvas.width / 16;
-    for (let r = 0; r < 16; r++) {
-        for (let c = 0; c < 16; c++) {
-            if (!sprite[r][c]) continue;
-            ctx.fillStyle = GB_PAL[sprite[r][c]];
-            ctx.fillRect(c * cell, r * cell, cell, cell);
-        }
-    }
-}
-
-/* ============================================================
    TITLE SCREEN — Pokémon Blue
+   Press start → dive into the screen, revealing the 3D Game Boy
    ============================================================ */
 function initTitleScreen() {
     const screen = document.getElementById('title-screen');
     if (!screen) return;
 
-    drawSprite('title-sprite', TRAINER_SPRITE);
-    drawSprite('title-sprite-buddy', BUDDY_SPRITE);
-
     function dismiss() {
         screen.classList.add('fade-out');
         document.body.classList.remove('title-locked');
-        setTimeout(() => screen.classList.add('hidden'), 950);
+        document.dispatchEvent(new CustomEvent('gb:start'));
+        setTimeout(() => screen.classList.add('hidden'), 1250);
     }
 
     screen.addEventListener('click', dismiss, { once: true });
