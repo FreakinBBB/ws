@@ -517,6 +517,144 @@ body.title-locked { overflow: hidden; }
 .about-card strong { color: var(--ink); font-weight: 600; }
 
 /* ============================================================
+   CURRENT PRIORITIES — three, not five, not ten
+   ============================================================ */
+.priorities {
+    margin-top: 72px;
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 48px;
+    align-items: start;
+}
+.priorities-head h3 {
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 12px;
+}
+.priorities-note {
+    font-size: 0.95rem;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 280px;
+}
+.priorities-list { display: flex; flex-direction: column; }
+.priority-row {
+    display: flex;
+    align-items: baseline;
+    gap: 22px;
+    padding: 22px 18px;
+    border-top: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    transition: background var(--t-fast), padding-left var(--t-fast);
+}
+.priority-row:last-child { border-bottom: 1px solid var(--line); }
+.priority-row:hover { background: var(--cream); padding-left: 26px; }
+.priority-num {
+    font-family: var(--font-pixel);
+    font-size: 0.56rem;
+    color: var(--blue);
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+}
+.priority-text {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    flex: 1;
+}
+.priority-meta {
+    font-size: 0.8rem;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   ONE DAY, STRUCTURED — horizontal day strip
+   ============================================================ */
+.day-strip {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(215px, 1fr);
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 18px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted) transparent;
+}
+.day-card {
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    padding: 26px 22px;
+    scroll-snap-align: start;
+    transition: transform var(--t-smooth), box-shadow var(--t-smooth);
+}
+.day-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 36px rgba(15, 15, 15, 0.1);
+}
+.day-time {
+    display: inline-block;
+    font-family: var(--font-pixel);
+    font-size: 0.52rem;
+    letter-spacing: 0.1em;
+    color: var(--cream);
+    background: var(--blue);
+    border-radius: 999px;
+    padding: 6px 12px;
+    margin-bottom: 18px;
+}
+.day-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 6px;
+}
+.day-card p { font-size: 0.86rem; color: var(--ink-soft); line-height: 1.55; }
+.day-card-last { background: var(--ink); }
+.day-card-last h3 { color: var(--cream); }
+.day-card-last p { color: rgba(244, 239, 234, 0.75); }
+.day-save {
+    display: inline-block;
+    margin-top: 10px;
+    font-family: var(--font-pixel);
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    color: var(--blue-light);
+    animation: press-blink 1.3s step-end infinite;
+}
+
+/* ============================================================
+   MANIFESTO — quiet full-width statement
+   ============================================================ */
+.manifesto {
+    background: var(--ink);
+    padding: 140px 40px;
+    text-align: center;
+}
+.manifesto-line {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5.5vw, 4.2rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: var(--cream);
+}
+.manifesto-line em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--blue-light);
+}
+
+/* ============================================================
    PUBLICATIONS
    ============================================================ */
 .publications-list { display: flex; flex-direction: column; }
@@ -745,8 +883,36 @@ a.pub-link:hover { color: var(--blue); }
 .footer {
     background: var(--ink);
     color: var(--cream);
-    padding: 54px 40px;
+    padding: 90px 40px 54px;
 }
+.footer-cta {
+    max-width: 1080px;
+    margin: 0 auto 80px;
+    text-align: center;
+}
+.footer-eyebrow {
+    font-family: var(--font-pixel);
+    font-size: 0.56rem;
+    letter-spacing: 0.16em;
+    color: rgba(244, 239, 234, 0.55);
+    margin-bottom: 26px;
+}
+.footer-title {
+    font-family: var(--font-display);
+    font-size: clamp(3.4rem, 9vw, 6.4rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--cream);
+    margin-bottom: 38px;
+}
+.footer-title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--blue-light);
+}
+.pill-cream { background: var(--cream); color: var(--ink); }
+.pill-cream:hover { background: var(--blue-light); }
 .footer-inner {
     max-width: 1080px;
     margin: 0 auto;
@@ -755,6 +921,8 @@ a.pub-link:hover { color: var(--blue); }
     align-items: center;
     gap: 24px;
     flex-wrap: wrap;
+    padding-top: 40px;
+    border-top: 1px solid rgba(244, 239, 234, 0.14);
 }
 .footer-brand {
     font-family: var(--font-pixel);
@@ -853,6 +1021,14 @@ a.pub-link:hover { color: var(--blue); }
 
     .cv-item { flex-direction: column; gap: 8px; padding: 24px 16px; }
     .cv-date { min-width: auto; padding-top: 0; }
+
+    .priorities { grid-template-columns: 1fr; gap: 28px; margin-top: 52px; }
+    .priority-row { flex-wrap: wrap; gap: 12px; }
+    .priority-meta { width: 100%; padding-left: 46px; }
+
+    .day-strip { grid-auto-columns: 78%; }
+
+    .manifesto { padding: 90px 24px; }
 
     .footer-inner { flex-direction: column; text-align: center; }
     .footer-copyright { text-align: center; }
