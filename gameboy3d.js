@@ -3,41 +3,34 @@
  * The Game Boy sits on a fixed fullscreen layer behind the page.
  * PRESS START zooms out of the title screen into the model; scrolling
  * flies the camera to the part of the Game Boy tied to each section.
+ *
+ * The model is a DMG-01-inspired build made from primitives: extruded
+ * body with the classic rounded bottom-right corner, printed bezel,
+ * recessed D-pad, angled A/B dish, SELECT/START pills and the diagonal
+ * speaker grille — recolored to match the site's blue/cream palette.
  */
 
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from './vendor/RoundedBoxGeometry.js';
 
 const COLORS = {
-    body:   0xece7e3,
-    bezel:  0x1d3a6e,
-    dpad:   0x1c1a18,
-    ab:     0x3559a8,
-    pill:   0x837b74,
-    seam:   0xd9d2ce,
-    led:    0xc0392b,
+    body:    0xece7e3,
+    recess:  0xd6cfc9,
+    bezel:   0x1d3a6e,
+    dpad:    0x1c1a18,
+    ab:      0x3559a8,
+    pill:    0x837b74,
+    seam:    0xc9c1bb,
+    led:     0xc0392b,
+    slot:    0x23283b,
+    ink:     0x1c2a54,
 };
 
-/* 16×16 turtle buddy — pixel art shown on the Game Boy screen */
-const BUDDY = [
-    [0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0],
-    [0,0,0,0,1,2,2,2,2,2,1,0,0,0,0,0],
-    [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
-    [0,0,0,1,2,1,2,2,2,1,2,1,0,0,0,0],
-    [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
-    [0,0,0,0,1,2,2,1,1,2,1,0,0,0,0,0],
-    [0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0],
-    [0,0,0,1,1,3,3,3,3,3,1,1,0,0,0,0],
-    [0,0,1,2,1,3,1,3,1,3,1,2,1,0,0,0],
-    [0,0,1,2,1,3,3,1,3,3,1,2,1,0,0,0],
-    [0,0,0,1,1,3,1,3,1,3,1,1,0,0,0,0],
-    [0,0,0,0,1,3,3,3,3,3,1,0,0,0,0,0],
-    [0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],
-    [0,0,0,1,2,2,1,0,1,2,2,1,0,0,0,0],
-    [0,0,0,1,2,2,1,0,1,2,2,1,0,0,0,0],
-    [0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0],
-];
-const PIX_PAL = ['', '#1c2a54', '#3559a8', '#93a9d6'];
+/* redraw queue for canvas-based prints once the web fonts arrive */
+const fontRedraws = [];
+if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => fontRedraws.forEach(fn => fn()));
+}
 
 /* ------------------------------------------------------------
    Screen texture — animated title screen on a 2D canvas
@@ -62,39 +55,26 @@ function makeScreenTexture() {
 
         ctx.fillStyle = '#1c2a54';
         ctx.font = pixelFont(14);
-        ctx.fillText('DR. UMBERTO', W / 2, 66);
+        ctx.fillText('DR. UMBERTO', W / 2, 108);
 
         // chunky blue logo with bevel
         ctx.font = pixelFont(46);
         ctx.fillStyle = '#1c2a54';
-        ctx.fillText('CARUGO', W / 2 + 4, 128 + 4);
+        ctx.fillText('CARUGO', W / 2 + 4, 178 + 4);
         ctx.fillStyle = '#93a9d6';
-        ctx.fillText('CARUGO', W / 2, 128 - 3);
+        ctx.fillText('CARUGO', W / 2, 178 - 3);
         ctx.fillStyle = '#3559a8';
-        ctx.fillText('CARUGO', W / 2, 128);
-
-        ctx.fillStyle = '#1c2a54';
-        ctx.font = pixelFont(15);
-        ctx.fillText('◆ Blue Version ◆', W / 2, 188);
-
-        // buddy sprite
-        const cell = 9;
-        const ox = W / 2 - (16 * cell) / 2;
-        const oy = 216;
-        for (let r = 0; r < 16; r++) {
-            for (let c = 0; c < 16; c++) {
-                const v = BUDDY[r][c];
-                if (!v) continue;
-                ctx.fillStyle = PIX_PAL[v];
-                ctx.fillRect(ox + c * cell, oy + r * cell, cell, cell);
-            }
-        }
+        ctx.fillText('CARUGO', W / 2, 178);
 
         if (blinkOn) {
             ctx.fillStyle = '#1c2a54';
             ctx.font = pixelFont(15);
-            ctx.fillText('PRESS START', W / 2, 396);
+            ctx.fillText('PRESS START', W / 2, 312);
         }
+
+        ctx.fillStyle = '#1c2a54';
+        ctx.font = pixelFont(10);
+        ctx.fillText("©'95.'26 CARUGO inc.", W / 2, 398);
     }
 
     draw();
@@ -103,36 +83,149 @@ function makeScreenTexture() {
     texture.anisotropy = 4;
 
     setInterval(() => { blinkOn = !blinkOn; draw(); texture.needsUpdate = true; }, 650);
-    if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(() => { draw(); texture.needsUpdate = true; });
-    }
+    fontRedraws.push(() => { draw(); texture.needsUpdate = true; });
     return texture;
 }
 
 /* ------------------------------------------------------------
-   Game Boy model — built from primitives
+   Small helpers
+   ------------------------------------------------------------ */
+
+/* Weld duplicated vertices and recompute normals so extruded
+   bevels shade smoothly instead of showing faceted strips. */
+function weldedSmooth(geometry) {
+    const pos = geometry.attributes.position;
+    const prec = 1e4;
+    const map = new Map();
+    const verts = [];
+    const indices = [];
+    for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+        const key = `${Math.round(x * prec)}|${Math.round(y * prec)}|${Math.round(z * prec)}`;
+        let idx = map.get(key);
+        if (idx === undefined) {
+            idx = verts.length / 3;
+            verts.push(x, y, z);
+            map.set(key, idx);
+        }
+        indices.push(idx);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+    g.setIndex(indices);
+    g.computeVertexNormals();
+    return g;
+}
+
+/* Transparent canvas print (labels, logos) as a plane mesh. */
+function makePrint(w, h, drawFn, pxPerUnit = 110) {
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(w * pxPerUnit);
+    cv.height = Math.round(h * pxPerUnit);
+    const ctx = cv.getContext('2d');
+
+    const draw = () => {
+        ctx.clearRect(0, 0, cv.width, cv.height);
+        drawFn(ctx, cv.width, cv.height);
+    };
+    draw();
+
+    const texture = new THREE.CanvasTexture(cv);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 4;
+    fontRedraws.push(() => { draw(); texture.needsUpdate = true; });
+
+    const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, h),
+        new THREE.MeshStandardMaterial({ map: texture, transparent: true, roughness: 0.6, metalness: 0 })
+    );
+    return mesh;
+}
+
+const css = (hex) => `#${hex.toString(16).padStart(6, '0')}`;
+
+/* ------------------------------------------------------------
+   Game Boy model — DMG-01 silhouette from primitives
    ------------------------------------------------------------ */
 function buildGameBoy() {
     const gb = new THREE.Group();
 
-    const bodyMat  = new THREE.MeshStandardMaterial({ color: COLORS.body, roughness: 0.55, metalness: 0.05 });
-    const bezelMat = new THREE.MeshStandardMaterial({ color: COLORS.bezel, roughness: 0.4, metalness: 0.1 });
-    const dpadMat  = new THREE.MeshStandardMaterial({ color: COLORS.dpad, roughness: 0.45 });
-    const abMat    = new THREE.MeshStandardMaterial({ color: COLORS.ab, roughness: 0.35 });
-    const pillMat  = new THREE.MeshStandardMaterial({ color: COLORS.pill, roughness: 0.5 });
+    const bodyMat   = new THREE.MeshStandardMaterial({ color: COLORS.body, roughness: 0.55, metalness: 0.04 });
+    const recessMat = new THREE.MeshStandardMaterial({ color: COLORS.recess, roughness: 0.6, metalness: 0.02 });
+    const bezelMat  = new THREE.MeshStandardMaterial({ color: COLORS.bezel, roughness: 0.42, metalness: 0.1 });
+    const dpadMat   = new THREE.MeshStandardMaterial({ color: COLORS.dpad, roughness: 0.45 });
+    const abMat     = new THREE.MeshStandardMaterial({ color: COLORS.ab, roughness: 0.35 });
+    const pillMat   = new THREE.MeshStandardMaterial({ color: COLORS.pill, roughness: 0.5 });
+    const slotMat   = new THREE.MeshStandardMaterial({ color: COLORS.slot, roughness: 0.6 });
 
-    const body = new THREE.Mesh(new RoundedBoxGeometry(5.6, 9.4, 1.5, 6, 0.34), bodyMat);
+    /* --- body: extruded plate, big rounded bottom-right corner (DMG) --- */
+    const W2 = 2.8, H2 = 4.7;       // half extents → 5.6 × 9.4 like before
+    const rT = 0.42, rBL = 0.42, rBR = 1.7;
+    const shape = new THREE.Shape();
+    shape.moveTo(-W2, -H2 + rBL);
+    shape.lineTo(-W2, H2 - rT);
+    shape.absarc(-W2 + rT, H2 - rT, rT, Math.PI, Math.PI / 2, true);
+    shape.lineTo(W2 - rT, H2);
+    shape.absarc(W2 - rT, H2 - rT, rT, Math.PI / 2, 0, true);
+    shape.lineTo(W2, -H2 + rBR);
+    shape.absarc(W2 - rBR, -H2 + rBR, rBR, 0, -Math.PI / 2, true);
+    shape.lineTo(-W2 + rBL, -H2);
+    shape.absarc(-W2 + rBL, -H2 + rBL, rBL, -Math.PI / 2, -Math.PI, true);
+    shape.closePath();
+
+    const bodyGeo = weldedSmooth(new THREE.ExtrudeGeometry(shape, {
+        depth: 1.3,
+        curveSegments: 24,
+        bevelEnabled: true,
+        bevelThickness: 0.1,
+        bevelSize: 0.09,
+        bevelSegments: 5,
+    }));
+    bodyGeo.translate(0, 0, -0.65); // center depth → faces at z ≈ ±0.75
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
     body.castShadow = true;
     gb.add(body);
 
-    const bezel = new THREE.Mesh(new RoundedBoxGeometry(4.7, 3.9, 0.25, 4, 0.12), bezelMat);
+    /* top seam groove (two-part shell like the real case) */
+    const seam = new THREE.Mesh(
+        new THREE.BoxGeometry(5.62, 0.04, 1.52),
+        new THREE.MeshStandardMaterial({ color: COLORS.seam, roughness: 0.6 })
+    );
+    seam.position.set(0, 4.1, 0);
+    gb.add(seam);
+
+    /* --- screen bezel with printed stripes + text --- */
+    const bezel = new THREE.Mesh(new RoundedBoxGeometry(4.7, 4.2, 0.25, 4, 0.14), bezelMat);
     bezel.position.set(0, 2.35, 0.72);
     bezel.castShadow = true;
     gb.add(bezel);
 
+    const bezelPrint = makePrint(4.7, 4.2, (ctx, w, h) => {
+        const px = (u) => (u / 4.7) * w;
+        // twin accent stripes across the top
+        ctx.fillStyle = '#93a9d6';
+        ctx.fillRect(px(0.18), h * 0.045, w - px(0.36), h * 0.008);
+        ctx.fillStyle = '#c0704e';
+        ctx.fillRect(px(0.18), h * 0.082, w - px(0.36), h * 0.008);
+        // clear a gap and print the tagline between the stripes
+        ctx.font = `italic 700 ${h * 0.032}px 'Instrument Sans', sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const label = 'DOT MATRIX WITH STEREO SOUND';
+        const tw = ctx.measureText(label).width;
+        ctx.clearRect(w / 2 - tw / 2 - px(0.08), h * 0.02, tw + px(0.16), h * 0.09);
+        ctx.fillStyle = '#d9d2ce';
+        ctx.fillText(label, w / 2, h * 0.066);
+        // battery label under the LED
+        ctx.font = `600 ${h * 0.024}px 'Instrument Sans', sans-serif`;
+        ctx.fillText('BATTERY', px(0.37), h * 0.512);
+    });
+    bezelPrint.position.set(0, 2.35, 0.851);
+    gb.add(bezelPrint);
+
     const screenMat = new THREE.MeshStandardMaterial({
         map: makeScreenTexture(),
-        roughness: 0.3,
+        roughness: 0.25,
         metalness: 0.0,
     });
     const screen = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 3.24), screenMat);
@@ -143,57 +236,174 @@ function buildGameBoy() {
         new THREE.SphereGeometry(0.07, 12, 12),
         new THREE.MeshStandardMaterial({ color: COLORS.led, emissive: COLORS.led, emissiveIntensity: 0.9 })
     );
-    led.position.set(-2.1, 3.1, 0.78);
+    led.position.set(-1.98, 2.6, 0.865);
     gb.add(led);
 
-    const dpadH = new THREE.Mesh(new RoundedBoxGeometry(1.7, 0.58, 0.32, 3, 0.08), dpadMat);
-    dpadH.position.set(-1.5, -1.15, 0.8);
-    const dpadV = new THREE.Mesh(new RoundedBoxGeometry(0.58, 1.7, 0.32, 3, 0.08), dpadMat);
-    dpadV.position.set(-1.5, -1.15, 0.8);
+    /* --- logo print under the screen --- */
+    const logo = makePrint(3.3, 0.42, (ctx, w, h) => {
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = css(COLORS.ink);
+        ctx.font = `italic 700 ${h * 0.72}px 'Instrument Sans', sans-serif`;
+        ctx.fillText('CARUGO BOY', w / 2, h * 0.52);
+        const tw = ctx.measureText('CARUGO BOY').width;
+        ctx.font = `700 ${h * 0.26}px 'Instrument Sans', sans-serif`;
+        ctx.fillText('™', w / 2 + tw / 2 + h * 0.22, h * 0.3);
+    });
+    logo.position.set(0, -0.02, 0.755);
+    gb.add(logo);
+
+    /* --- D-pad in a circular recess --- */
+    const dpadDish = new THREE.Mesh(new THREE.CircleGeometry(1.16, 40), recessMat);
+    dpadDish.position.set(-1.5, -1.15, 0.752);
+    gb.add(dpadDish);
+
+    const dpadH = new THREE.Mesh(new RoundedBoxGeometry(1.7, 0.6, 0.34, 3, 0.11), dpadMat);
+    dpadH.position.set(-1.5, -1.15, 0.82);
+    const dpadV = new THREE.Mesh(new RoundedBoxGeometry(0.6, 1.7, 0.34, 3, 0.11), dpadMat);
+    dpadV.position.set(-1.5, -1.15, 0.82);
+    const dpadDome = new THREE.Mesh(new THREE.SphereGeometry(0.26, 20, 12), dpadMat);
+    dpadDome.scale.set(1, 1, 0.5);
+    dpadDome.position.set(-1.5, -1.15, 0.97);
     dpadH.castShadow = dpadV.castShadow = true;
-    gb.add(dpadH, dpadV);
+    gb.add(dpadH, dpadV, dpadDome);
 
-    const btnGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.3, 24);
-    const btnA = new THREE.Mesh(btnGeo, abMat);
-    btnA.rotation.x = Math.PI / 2;
-    btnA.position.set(2.05, -0.85, 0.8);
-    const btnB = new THREE.Mesh(btnGeo, abMat);
-    btnB.rotation.x = Math.PI / 2;
-    btnB.position.set(1.0, -1.35, 0.8);
-    btnA.castShadow = btnB.castShadow = true;
-    gb.add(btnA, btnB);
+    /* --- A/B buttons on an angled recessed dish --- */
+    const AB_TILT = -0.46;
+    const dishShape = new THREE.Shape();
+    {
+        const dw = 1.18, dh = 0.62, dr = 0.6; // stadium-ish rounded rect
+        dishShape.moveTo(-dw, -dh + dr);
+        dishShape.lineTo(-dw, dh - dr);
+        dishShape.absarc(-dw + dr, dh - dr, dr, Math.PI, Math.PI / 2, true);
+        dishShape.lineTo(dw - dr, dh);
+        dishShape.absarc(dw - dr, dh - dr, dr, Math.PI / 2, 0, true);
+        dishShape.lineTo(dw, -dh + dr);
+        dishShape.absarc(dw - dr, -dh + dr, dr, 0, -Math.PI / 2, true);
+        dishShape.lineTo(-dw + dr, -dh);
+        dishShape.absarc(-dw + dr, -dh + dr, dr, -Math.PI / 2, -Math.PI, true);
+        dishShape.closePath();
+    }
+    const abDish = new THREE.Mesh(
+        new THREE.ExtrudeGeometry(dishShape, { depth: 0.045, curveSegments: 20, bevelEnabled: false }),
+        recessMat
+    );
+    abDish.rotation.z = AB_TILT;
+    abDish.position.set(1.52, -1.1, 0.72);
+    gb.add(abDish);
 
-    const pillGeo = new THREE.CapsuleGeometry(0.13, 0.5, 4, 10);
-    for (const dx of [-0.45, 0.45]) {
+    const btnBase = new THREE.CylinderGeometry(0.42, 0.45, 0.2, 28);
+    const btnCap = new THREE.SphereGeometry(0.42, 28, 14);
+    for (const [x, y, letter] of [[2.05, -0.85, 'A'], [1.0, -1.35, 'B']]) {
+        const base = new THREE.Mesh(btnBase, abMat);
+        base.rotation.x = Math.PI / 2;
+        base.position.set(x, y, 0.84);
+        const cap = new THREE.Mesh(btnCap, abMat);
+        cap.scale.set(1, 1, 0.28);
+        cap.position.set(x, y, 0.94);
+        base.castShadow = true;
+        gb.add(base, cap);
+
+        const tag = makePrint(0.3, 0.3, (ctx, w, h) => {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = css(COLORS.ink);
+            ctx.font = `${h * 0.72}px "Press Start 2P", monospace`;
+            ctx.fillText(letter, w / 2, h * 0.56);
+        });
+        tag.rotation.z = AB_TILT;
+        tag.position.set(x - 0.28, y - 0.52, 0.79);
+        gb.add(tag);
+    }
+
+    /* --- SELECT / START pills in grooves, with printed labels --- */
+    const pillGeo = new THREE.CapsuleGeometry(0.13, 0.5, 4, 12);
+    const grooveGeo = new THREE.CapsuleGeometry(0.2, 0.52, 4, 12);
+    const names = ['SELECT', 'START'];
+    [-0.45, 0.45].forEach((dx, i) => {
+        const groove = new THREE.Mesh(grooveGeo, recessMat);
+        groove.rotation.z = Math.PI / 2 - 0.5;
+        groove.scale.set(1, 1, 0.22);
+        groove.position.set(dx, -3.0, 0.752);
+        gb.add(groove);
+
         const pill = new THREE.Mesh(pillGeo, pillMat);
         pill.rotation.z = Math.PI / 2 - 0.5;
         pill.position.set(dx, -3.0, 0.78);
         pill.castShadow = true;
         gb.add(pill);
-    }
 
-    const slotGeo = new THREE.CapsuleGeometry(0.055, 0.7, 4, 8);
-    for (let i = 0; i < 5; i++) {
-        const slot = new THREE.Mesh(slotGeo, bezelMat);
-        slot.rotation.z = -0.6;
-        slot.position.set(1.35 + i * 0.28, -3.75 + i * 0.1, 0.76);
+        const tag = makePrint(0.95, 0.24, (ctx, w, h) => {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = css(COLORS.ink);
+            ctx.font = `600 ${h * 0.62}px 'Instrument Sans', sans-serif`;
+            ctx.fillText(names[i], w / 2, h * 0.55);
+        });
+        tag.rotation.z = -0.47;
+        tag.position.set(dx, -3.42, 0.752);
+        gb.add(tag);
+    });
+
+    /* --- diagonal speaker grille, hugging the round corner --- */
+    const slotGeo = new THREE.CapsuleGeometry(0.06, 0.68, 4, 8);
+    for (let i = 0; i < 6; i++) {
+        const slot = new THREE.Mesh(slotGeo, slotMat);
+        slot.rotation.z = -0.55;
+        slot.scale.set(1, 1, 0.3);
+        slot.position.set(0.95 + i * 0.3, -3.85 + i * 0.16, 0.752);
         gb.add(slot);
     }
 
-    const seam = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.05, 1.52), new THREE.MeshStandardMaterial({ color: COLORS.seam, roughness: 0.6 }));
-    seam.position.set(0, 4.1, 0);
-    gb.add(seam);
+    /* --- side & top hardware details --- */
+    const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.12, 24);
+    for (const side of [-1, 1]) {           // contrast (left) / volume (right)
+        const wheel = new THREE.Mesh(wheelGeo, dpadMat);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.position.set(side * 2.85, 2.5, 0);
+        gb.add(wheel);
+    }
 
+    const power = new THREE.Mesh(new RoundedBoxGeometry(0.55, 0.16, 0.22, 2, 0.06), dpadMat);
+    power.position.set(-1.75, 4.74, 0.12);
+    gb.add(power);
+
+    const jack = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.14, 20), dpadMat);
+    jack.position.set(-0.7, -4.74, 0);
+    gb.add(jack);
+
+    /* --- cartridge in the back slot --- */
     const cart = new THREE.Mesh(new RoundedBoxGeometry(3.4, 3.6, 0.5, 3, 0.1), abMat);
     cart.position.set(0, 2.0, -0.85);
     cart.castShadow = true;
     gb.add(cart);
-    const cartLabel = new THREE.Mesh(
-        new RoundedBoxGeometry(2.6, 2.4, 0.1, 2, 0.05),
-        new THREE.MeshStandardMaterial({ color: COLORS.body, roughness: 0.6 })
-    );
-    cartLabel.position.set(0, 1.9, -1.12);
+
+    const cartLabel = makePrint(2.6, 2.4, (ctx, w, h) => {
+        // cream label with a blue header band, like a classic cart sticker
+        ctx.fillStyle = css(COLORS.body);
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = css(COLORS.ink);
+        ctx.fillRect(0, 0, w, h * 0.24);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#e6e3dc';
+        ctx.font = `${h * 0.09}px "Press Start 2P", monospace`;
+        ctx.fillText('CARUGO', w / 2, h * 0.13);
+        ctx.fillStyle = css(COLORS.ink);
+        ctx.font = `${h * 0.085}px "Press Start 2P", monospace`;
+        ctx.fillText('RESEARCH', w / 2, h * 0.52);
+        ctx.fillText('QUEST', w / 2, h * 0.66);
+        ctx.fillStyle = '#837b74';
+        ctx.font = `${h * 0.05}px "Press Start 2P", monospace`;
+        ctx.fillText('EST. 1995', w / 2, h * 0.87);
+    });
+    cartLabel.rotation.y = Math.PI;
+    cartLabel.position.set(0, 1.9, -1.105);
     gb.add(cartLabel);
+
+    const cartNotch = new THREE.Mesh(new RoundedBoxGeometry(1.3, 0.35, 0.12, 2, 0.05), abMat);
+    cartNotch.position.set(0, 3.85, -0.98);
+    gb.add(cartNotch);
 
     return gb;
 }
@@ -204,7 +414,6 @@ function buildGameBoy() {
 const SHOTS = [
     { sel: '.hero',          pos: [8, 3.5, 15],      tgt: [-2.6, 0.2, 0],   orbit: 0.14 }, // full view, GB on the right
     { sel: '#about',         pos: [3.2, 2.6, 7.5],   tgt: [1.6, 2.3, 0]    },              // the screen (who I am)
-    { sel: '#day',           pos: [-4.6, -0.3, 7.0], tgt: [-2.5, -1.15, 0] },              // d-pad (navigating the day)
     { sel: '#publications',  pos: [-1.2, 2.5, -7.5], tgt: [-1.2, 2.0, -0.9]},              // cartridge on the back (papers)
     { sel: '#projects',      pos: [-1.2, -0.4, 6.2], tgt: [0.3, -1.0, 0]   },              // A/B buttons (action)
     { sel: '#cv',            pos: [3.0, -2.2, 6.0],  tgt: [1.8, -2.9, 0]   },              // start/select (the path)
