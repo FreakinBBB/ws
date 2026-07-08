@@ -129,15 +129,8 @@ body.title-locked { overflow: hidden; }
     bottom: 0.35em;
     text-shadow: 1px 1px 0 var(--gb-ink);
 }
-.title-version {
-    font-family: var(--font-pixel);
-    font-size: 0.85rem;
-    color: var(--gb-ink);
-    letter-spacing: 0.06em;
-    margin-top: 26px;
-    margin-bottom: 70px;
-}
 .title-press-start {
+    margin-top: 84px;
     font-family: var(--font-pixel);
     font-size: 0.78rem;
     color: var(--gb-ink);
@@ -351,35 +344,6 @@ main { position: relative; z-index: 1; }
 }
 
 /* ============================================================
-   MARQUEE
-   ============================================================ */
-.marquee {
-    overflow: hidden;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    background: var(--ink);
-    padding: 16px 0;
-    position: relative;
-    z-index: 2;
-}
-.marquee-track {
-    display: flex;
-    white-space: nowrap;
-    animation: marquee-scroll 40s linear infinite;
-}
-.marquee-track span {
-    font-family: var(--font-pixel);
-    font-size: 0.62rem;
-    letter-spacing: 0.18em;
-    color: var(--cream);
-    flex-shrink: 0;
-}
-@keyframes marquee-scroll {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-}
-
-/* ============================================================
    SECTIONS — floating panels over the 3D layer
    ============================================================ */
 .section { padding: 28vh 40px; position: relative; }
@@ -569,64 +533,6 @@ main { position: relative; z-index: 1; }
     color: var(--muted);
     letter-spacing: 0.02em;
     flex-shrink: 0;
-}
-
-/* ============================================================
-   ONE DAY, STRUCTURED — horizontal day strip
-   ============================================================ */
-.day-strip {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(215px, 1fr);
-    gap: 16px;
-    overflow-x: auto;
-    padding-bottom: 18px;
-    scroll-snap-type: x proximity;
-    scrollbar-width: thin;
-    scrollbar-color: var(--muted) transparent;
-}
-.day-card {
-    background: var(--card);
-    border-radius: var(--radius-sm);
-    padding: 26px 22px;
-    scroll-snap-align: start;
-    transition: transform var(--t-smooth), box-shadow var(--t-smooth);
-}
-.day-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 16px 36px rgba(15, 15, 15, 0.1);
-}
-.day-time {
-    display: inline-block;
-    font-family: var(--font-pixel);
-    font-size: 0.52rem;
-    letter-spacing: 0.1em;
-    color: var(--cream);
-    background: var(--blue);
-    border-radius: 999px;
-    padding: 6px 12px;
-    margin-bottom: 18px;
-}
-.day-card h3 {
-    font-family: var(--font-display);
-    font-size: 1.2rem;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    color: var(--ink);
-    margin-bottom: 6px;
-}
-.day-card p { font-size: 0.86rem; color: var(--ink-soft); line-height: 1.55; }
-.day-card-last { background: var(--ink); }
-.day-card-last h3 { color: var(--cream); }
-.day-card-last p { color: rgba(244, 239, 234, 0.75); }
-.day-save {
-    display: inline-block;
-    margin-top: 10px;
-    font-family: var(--font-pixel);
-    font-size: 0.5rem;
-    letter-spacing: 0.1em;
-    color: var(--blue-light);
-    animation: press-blink 1.3s step-end infinite;
 }
 
 /* ============================================================
@@ -1004,8 +910,6 @@ a.pub-link:hover { color: var(--blue); }
     .priorities { grid-template-columns: 1fr; gap: 28px; margin-top: 52px; }
     .priority-row { flex-wrap: wrap; gap: 12px; }
     .priority-meta { width: 100%; padding-left: 46px; }
-
-    .day-strip { grid-auto-columns: 78%; }
 
     .manifesto { padding: 90px 24px; }
 
