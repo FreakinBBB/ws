@@ -73,7 +73,7 @@ function initTypingEffect() {
    ============================================================ */
 function initScrollAnimations() {
     const targets = document.querySelectorAll(
-        '.section-header, .about-card, .publication-card, .project-card, .cv-item, .cv-download, .contact-message, .contact-card, .group-label, .priorities, .manifesto-line, .footer-cta'
+        '.gb-hud, .manifesto-line, .footer-cta'
     );
 
     targets.forEach(el => el.classList.add('reveal'));

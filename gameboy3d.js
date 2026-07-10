@@ -33,58 +33,255 @@ if (document.fonts && document.fonts.ready) {
 }
 
 /* ------------------------------------------------------------
-   Screen texture — animated title screen on a 2D canvas
+   Screen controller — GB-style "pages" rendered on a 2D canvas.
+   Scrolling the site flips the screen to the matching section,
+   with a quick palette-fade like a real cartridge scene change.
    ------------------------------------------------------------ */
-function makeScreenTexture() {
+function makeScreenController() {
     const W = 480, H = 432; // 10:9 like the GB's 160×144
     const cv = document.createElement('canvas');
     cv.width = W; cv.height = H;
     const ctx = cv.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
-    let blinkOn = true;
+    const BG = '#e6e3dc', INK = '#1c2a54', BLUE = '#3559a8', LIGHT = '#93a9d6', MUTED = '#8b93a6';
+    const P = (size) => `${size}px "Press Start 2P", monospace`;
+
+    let page = 'title';
+    let fade = 0;   // white-out overlay right after a page flip
+    let tick = 0;
+    const blink = () => (tick >> 2) & 1;
+
+    function band(title) {
+        ctx.fillStyle = INK;
+        ctx.fillRect(0, 0, W, 56);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = BG;
+        ctx.font = P(16);
+        ctx.fillText(title, 26, 32);
+    }
+
+    /* Pokémon-style menu with a cycling ">" cursor */
+    function menu(items, sel, x, y, step, size) {
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.font = P(size);
+        items.forEach((label, i) => {
+            if (i === sel) {
+                ctx.fillStyle = BLUE;
+                ctx.fillText('>', x, y + i * step);
+            }
+            ctx.fillStyle = i === sel ? INK : MUTED;
+            ctx.fillText(label, x + size * 1.6, y + i * step);
+        });
+    }
+
+    function wrap(text, size, maxW) {
+        ctx.font = P(size);
+        const lines = [];
+        let line = '';
+        for (const word of text.split(' ')) {
+            const probe = line ? `${line} ${word}` : word;
+            if (ctx.measureText(probe).width > maxW && line) {
+                lines.push(line);
+                line = word;
+            } else {
+                line = probe;
+            }
+        }
+        if (line) lines.push(line);
+        return lines;
+    }
+
+    const PROJECTS = [
+        ['VR NEUROREHAB',   'VR REHAB OF EXECUTIVE FUNCTIONS IN KIDS WITH DCD'],
+        ['DIGITAL REY-O',   'TABLET VS PAPER REY FIGURE VALIDATION STUDY'],
+        ['IOGIOCO',         'NAO ROBOT TEACHING GESTURES TO ASD CHILDREN'],
+        ['PHASE III TRIAL', 'SUB-INVESTIGATOR IN A PHASE III DRUG TRIAL'],
+        ['WHO-NPIA',        'WEB MAP OF MILAN CHILD NPI UNITS'],
+    ];
+
+    const pages = {
+        title() {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = INK;
+            ctx.font = P(14);
+            ctx.fillText('DR. UMBERTO', W / 2, 108);
+
+            // chunky blue logo with bevel
+            ctx.font = P(46);
+            ctx.fillStyle = INK;
+            ctx.fillText('CARUGO', W / 2 + 4, 178 + 4);
+            ctx.fillStyle = LIGHT;
+            ctx.fillText('CARUGO', W / 2, 178 - 3);
+            ctx.fillStyle = BLUE;
+            ctx.fillText('CARUGO', W / 2, 178);
+
+            if (blink()) {
+                ctx.fillStyle = INK;
+                ctx.font = P(15);
+                ctx.fillText('PRESS START', W / 2, 312);
+            }
+
+            ctx.fillStyle = INK;
+            ctx.font = P(10);
+            ctx.fillText("©'95.'26 CARUGO inc.", W / 2, 398);
+        },
+
+        about() {
+            band('ABOUT');
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = INK;
+            ctx.font = P(13);
+            ctx.fillText('NAME  UMBERTO CARUGO', 26, 96);
+            ctx.fillText('CLASS MEDIC LV.29', 26, 126);
+            ctx.fillText('TYPE  ELECTRIC', 26, 156);
+            ctx.fillStyle = LIGHT;
+            ctx.fillRect(26, 180, W - 52, 4);
+            const rows = [
+                ['PHYSICIAN',      'CHILD NPI @ MILAN'],
+                ['AI IN MEDICINE', 'XAIM MASTER @ PAVIA'],
+                ['RESEARCH',       'VR, GENETICS, DATA'],
+            ];
+            rows.forEach(([head, sub], i) => {
+                const y = 216 + i * 66;
+                ctx.fillStyle = BLUE;
+                ctx.font = P(13);
+                ctx.fillText(`*${head}`, 26, y);
+                ctx.fillStyle = INK;
+                ctx.font = P(11);
+                ctx.fillText(sub, 48, y + 28);
+            });
+        },
+
+        papers() {
+            band('PAPERS');
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = INK;
+            ctx.font = P(13);
+            ctx.fillText('CART INSERTED:', W / 2, 150);
+            ctx.fillStyle = BLUE;
+            ctx.font = P(18);
+            ctx.fillText('CARUGO PAPERS', W / 2, 200);
+            ctx.fillStyle = MUTED;
+            ctx.font = P(10);
+            ctx.fillText('4 ENTRIES / VER.2026', W / 2, 244);
+            if (blink()) {
+                ctx.fillStyle = INK;
+                ctx.font = P(12);
+                ctx.fillText('READ THE LABEL', W / 2, 330);
+                ctx.fillText('ON THE BACK', W / 2, 356);
+            }
+        },
+
+        projects() {
+            band('PROJECTS');
+            const sel = Math.floor(tick / 14) % PROJECTS.length;
+            menu(PROJECTS.map(p => p[0]), sel, 30, 98, 34, 14);
+            ctx.strokeStyle = INK;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(26, 290, W - 52, 118);
+            ctx.textAlign = 'left';
+            ctx.fillStyle = INK;
+            wrap(PROJECTS[sel][1], 11, W - 104).slice(0, 3).forEach((line, i) => {
+                ctx.fillText(line, 46, 320 + i * 28);
+            });
+        },
+
+        cv() {
+            band('CV / QUEST LOG');
+            const rows = [
+                ['2025', 'XAIM MASTER, PAVIA'],
+                ['2024', 'CCAIM, CAMBRIDGE'],
+                ['2022', 'NPI RESIDENCY, MILAN'],
+                ['2021', 'ERASMUS MC ROTTERDAM'],
+                ['2015', 'MD @ PAVIA'],
+            ];
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            rows.forEach(([year, text], i) => {
+                const y = 104 + i * 50;
+                ctx.fillStyle = BLUE;
+                ctx.font = P(12);
+                ctx.fillText(year, 26, y);
+                ctx.fillStyle = INK;
+                ctx.fillText(text, 92, y);
+            });
+            if (blink()) {
+                ctx.textAlign = 'center';
+                ctx.fillStyle = MUTED;
+                ctx.font = P(10);
+                ctx.fillText('FULL CV: JUST ASK', W / 2, 396);
+            }
+        },
+
+        contact() {
+            band('CONTACT');
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = INK;
+            ctx.font = P(16);
+            ctx.fillText("LET'S BUILD", 26, 104);
+            ctx.fillText('SOMETHING', 26, 136);
+            ctx.fillText('MEANINGFUL.', 26, 168);
+            const sel = Math.floor(tick / 10) % 3;
+            menu(['EMAIL', 'LINKEDIN', 'GITHUB'], sel, 30, 232, 38, 14);
+            ctx.textAlign = 'center';
+            ctx.fillStyle = MUTED;
+            ctx.font = P(10);
+            ctx.fillText('CARUGOUMBERTO@GMAIL.COM', W / 2, 396);
+        },
+
+        footer() {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = INK;
+            ctx.font = P(22);
+            ctx.fillText('THANKS FOR', W / 2, 140);
+            ctx.fillText('PLAYING!', W / 2, 184);
+            ctx.fillStyle = MUTED;
+            ctx.font = P(10);
+            ctx.fillText("©'95.'26 CARUGO inc.", W / 2, 258);
+            if (blink()) {
+                ctx.fillStyle = BLUE;
+                ctx.font = P(13);
+                ctx.fillText('SAY HI!', W / 2, 340);
+            }
+        },
+    };
 
     function draw() {
-        ctx.fillStyle = '#e6e3dc';
+        ctx.fillStyle = BG;
         ctx.fillRect(0, 0, W, H);
-
-        const pixelFont = (size) => `${size}px "Press Start 2P", monospace`;
-
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        ctx.fillStyle = '#1c2a54';
-        ctx.font = pixelFont(14);
-        ctx.fillText('DR. UMBERTO', W / 2, 108);
-
-        // chunky blue logo with bevel
-        ctx.font = pixelFont(46);
-        ctx.fillStyle = '#1c2a54';
-        ctx.fillText('CARUGO', W / 2 + 4, 178 + 4);
-        ctx.fillStyle = '#93a9d6';
-        ctx.fillText('CARUGO', W / 2, 178 - 3);
-        ctx.fillStyle = '#3559a8';
-        ctx.fillText('CARUGO', W / 2, 178);
-
-        if (blinkOn) {
-            ctx.fillStyle = '#1c2a54';
-            ctx.font = pixelFont(15);
-            ctx.fillText('PRESS START', W / 2, 312);
+        (pages[page] || pages.title)();
+        if (fade > 0) {
+            ctx.fillStyle = `rgba(230, 227, 220, ${fade.toFixed(2)})`;
+            ctx.fillRect(0, 0, W, H);
+            fade = Math.max(0, fade - 0.34);
         }
-
-        ctx.fillStyle = '#1c2a54';
-        ctx.font = pixelFont(10);
-        ctx.fillText("©'95.'26 CARUGO inc.", W / 2, 398);
     }
 
     draw();
     const texture = new THREE.CanvasTexture(cv);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = 4;
+    texture.magFilter = THREE.NearestFilter;
 
-    setInterval(() => { blinkOn = !blinkOn; draw(); texture.needsUpdate = true; }, 650);
+    setInterval(() => { tick++; draw(); texture.needsUpdate = true; }, 160);
     fontRedraws.push(() => { draw(); texture.needsUpdate = true; });
-    return texture;
+
+    return {
+        texture,
+        setPage(next) {
+            if (next === page || !pages[next]) return;
+            page = next;
+            fade = 1;
+        },
+    };
 }
 
 /* ------------------------------------------------------------
@@ -147,7 +344,7 @@ const css = (hex) => `#${hex.toString(16).padStart(6, '0')}`;
 /* ------------------------------------------------------------
    Game Boy model — DMG-01 silhouette from primitives
    ------------------------------------------------------------ */
-function buildGameBoy() {
+function buildGameBoy(screenTexture) {
     const gb = new THREE.Group();
 
     const bodyMat   = new THREE.MeshStandardMaterial({ color: COLORS.body, roughness: 0.55, metalness: 0.04 });
@@ -224,7 +421,7 @@ function buildGameBoy() {
     gb.add(bezelPrint);
 
     const screenMat = new THREE.MeshStandardMaterial({
-        map: makeScreenTexture(),
+        map: screenTexture,
         roughness: 0.25,
         metalness: 0.0,
     });
@@ -372,53 +569,82 @@ function buildGameBoy() {
     jack.position.set(-0.7, -4.74, 0);
     gb.add(jack);
 
-    /* --- cartridge in the back slot --- */
+    /* --- cartridge in the back slot — the papers ARE the cart --- */
+    // dark slot well, revealed when the cart slides out
+    const cartWell = new THREE.Mesh(new RoundedBoxGeometry(3.3, 3.5, 0.1, 2, 0.04), slotMat);
+    cartWell.position.set(0, 2.0, -0.76);
+    gb.add(cartWell);
+
+    const cartridge = new THREE.Group();
+
     const cart = new THREE.Mesh(new RoundedBoxGeometry(3.4, 3.6, 0.5, 3, 0.1), abMat);
     cart.position.set(0, 2.0, -0.85);
     cart.castShadow = true;
-    gb.add(cart);
+    cartridge.add(cart);
 
     const cartLabel = makePrint(2.6, 2.4, (ctx, w, h) => {
-        // cream label with a blue header band, like a classic cart sticker
+        // cream label with a blue header band — the publication list itself
         ctx.fillStyle = css(COLORS.body);
         ctx.fillRect(0, 0, w, h);
         ctx.fillStyle = css(COLORS.ink);
-        ctx.fillRect(0, 0, w, h * 0.24);
+        ctx.fillRect(0, 0, w, h * 0.17);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#e6e3dc';
-        ctx.font = `${h * 0.09}px "Press Start 2P", monospace`;
-        ctx.fillText('CARUGO', w / 2, h * 0.13);
-        ctx.fillStyle = css(COLORS.ink);
-        ctx.font = `${h * 0.085}px "Press Start 2P", monospace`;
-        ctx.fillText('RESEARCH', w / 2, h * 0.52);
-        ctx.fillText('QUEST', w / 2, h * 0.66);
+        ctx.font = `${h * 0.06}px "Press Start 2P", monospace`;
+        ctx.fillText('CARUGO PAPERS', w / 2, h * 0.09);
+
+        const rows = [
+            ['2026', 'AICARDI DELPHI',  'EUR J PAED NEUROL'],
+            ['2025', 'COL4A1/A2 GUIDE', 'PEDIATR NEUROL'],
+            ['2024', 'VR REHAB IN DCD', 'FIT4MEDROB POSTER'],
+            ['2024', 'IOGIOCO NAO+ASD', 'FIT4MEDROB POSTER'],
+        ];
+        ctx.textAlign = 'left';
+        rows.forEach(([year, title, venue], i) => {
+            const y = h * (0.27 + i * 0.165);
+            ctx.fillStyle = css(COLORS.ab);
+            ctx.font = `${h * 0.043}px "Press Start 2P", monospace`;
+            ctx.fillText(year, w * 0.05, y);
+            ctx.fillStyle = css(COLORS.ink);
+            ctx.fillText(title, w * 0.235, y);
+            ctx.fillStyle = '#837b74';
+            ctx.font = `${h * 0.033}px "Press Start 2P", monospace`;
+            ctx.fillText(venue, w * 0.235, y + h * 0.06);
+        });
+
+        ctx.textAlign = 'center';
         ctx.fillStyle = '#837b74';
-        ctx.font = `${h * 0.05}px "Press Start 2P", monospace`;
-        ctx.fillText('EST. 1995', w / 2, h * 0.87);
-    });
+        ctx.font = `${h * 0.036}px "Press Start 2P", monospace`;
+        ctx.fillText('EST.1995 - 4 ENTRIES', w / 2, h * 0.95);
+    }, 220);
     cartLabel.rotation.y = Math.PI;
     cartLabel.position.set(0, 1.9, -1.105);
-    gb.add(cartLabel);
+    cartridge.add(cartLabel);
 
     const cartNotch = new THREE.Mesh(new RoundedBoxGeometry(1.3, 0.35, 0.12, 2, 0.05), abMat);
     cartNotch.position.set(0, 3.85, -0.98);
-    gb.add(cartNotch);
+    cartridge.add(cartNotch);
+
+    gb.add(cartridge);
+    gb.userData.cartridge = cartridge;
 
     return gb;
 }
 
 /* ------------------------------------------------------------
-   Camera shots — one per section, targeting a Game Boy part
+   Camera shots — one per section. Content sections park the
+   camera on the screen (which plays that section's page);
+   Papers swings to the back where the cart pops out of the slot.
    ------------------------------------------------------------ */
 const SHOTS = [
-    { sel: '.hero',          pos: [8, 3.5, 15],      tgt: [-2.6, 0.2, 0],   orbit: 0.14 }, // full view, GB on the right
-    { sel: '#about',         pos: [3.2, 2.6, 7.5],   tgt: [1.6, 2.3, 0]    },              // the screen (who I am)
-    { sel: '#publications',  pos: [-1.2, 2.5, -7.5], tgt: [-1.2, 2.0, -0.9]},              // cartridge on the back (papers)
-    { sel: '#projects',      pos: [-1.2, -0.4, 6.2], tgt: [0.3, -1.0, 0]   },              // A/B buttons (action)
-    { sel: '#cv',            pos: [3.0, -2.2, 6.0],  tgt: [1.8, -2.9, 0]   },              // start/select (the path)
-    { sel: '#contact',       pos: [-0.8, -2.7, 5.6], tgt: [0.7, -3.4, 0]   },              // speaker (say hi)
-    { sel: '.footer',        pos: [0, 1.5, 20],      tgt: [0, 0, 0],        orbit: 0.2 },  // pull all the way back
+    { sel: '.hero',         pos: [8, 3.5, 15],      tgt: [-2.6, 0.2, 0],  orbit: 0.14, page: 'title' },   // full view, GB on the right
+    { sel: '#about',        pos: [1.7, 3.0, 7.6],   tgt: [0, 2.35, 0.5],  page: 'about' },                // screen: trainer card
+    { sel: '#publications', pos: [-1.6, 4.7, -8.8], tgt: [0, 4.0, -0.9],  page: 'papers', cartFocus: true }, // the papers cart, risen from the slot
+    { sel: '#projects',     pos: [-1.7, 1.8, 7.4],  tgt: [0, 2.3, 0.5],   page: 'projects' },             // screen: project menu
+    { sel: '#cv',           pos: [1.3, 2.0, 7.8],   tgt: [0, 2.35, 0.5],  page: 'cv' },                   // screen: quest log
+    { sel: '#contact',      pos: [-1.0, 2.8, 7.2],  tgt: [0, 2.35, 0.5],  page: 'contact' },              // screen: say hi
+    { sel: '.footer',       pos: [0, 1.5, 20],      tgt: [0, 0, 0],       orbit: 0.2, page: 'footer' },   // pull all the way back
 ];
 
 const INTRO_POS = new THREE.Vector3(0, 2.35, 2.4); // right in front of the screen
@@ -461,8 +687,11 @@ function init() {
     back.position.set(2, 4, -8);
     scene.add(back);
 
-    const gameboy = buildGameBoy();
+    const screenCtl = makeScreenController();
+    const gameboy = buildGameBoy(screenCtl.texture);
     scene.add(gameboy);
+    const cartridge = gameboy.userData.cartridge;
+    let cartRise = 0; // 0 = seated in the slot, 1 = popped out (papers section)
 
     const ground = new THREE.Mesh(
         new THREE.PlaneGeometry(60, 60),
@@ -480,6 +709,8 @@ function init() {
             pos: new THREE.Vector3(...s.pos),
             tgt: new THREE.Vector3(...s.tgt),
             orbit: s.orbit || 0,
+            page: s.page,
+            cartFocus: !!s.cartFocus,
         }))
         .filter(s => s.el);
 
@@ -547,6 +778,12 @@ function init() {
         A.x *= xs; B.x *= xs;
         desiredTgt.lerpVectors(A, B, t);
 
+        // flip the GB screen to the section we're closest to,
+        // and pop the papers cartridge out near its section
+        const nearest = t < 0.5 ? a : b;
+        if (nearest.page) screenCtl.setPage(nearest.page);
+        cartRise = (a.cartFocus ? 1 - t : 0) + (b.cartFocus ? t : 0);
+
         // idle orbit on the first/last shot, fading out as you scroll away
         let orbitAmt = 0;
         if (i === 0 && a.orbit) orbitAmt = a.orbit * (1 - t);
@@ -570,6 +807,9 @@ function init() {
         }
 
         computeScrollShot(time);
+
+        // slide the papers cart in/out of its slot
+        cartridge.position.y += (cartRise * 2.3 - cartridge.position.y) * 0.1;
 
         if (introStart !== null) {
             const k = THREE.MathUtils.clamp((performance.now() - introStart) / INTRO_MS, 0, 1);
