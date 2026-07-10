@@ -373,6 +373,29 @@ main { position: relative; z-index: 1; }
 .panel-right .gb-hud { margin-right: 4vw; }
 .panel-left  .gb-hud { margin-left: 4vw; }
 
+/* Papers: two scroll phases (back label → front label) with a sticky HUD.
+   The invisible anchors are the camera targets for each phase. */
+.section.section-tall {
+    min-height: 260vh;
+    display: block;
+    position: relative;
+}
+.pub-anchor-back, .pub-anchor-front {
+    position: absolute;
+    left: 0;
+    width: 1px;
+    height: 50%;
+    top: 0;
+    pointer-events: none;
+}
+.pub-anchor-front { top: 50%; }
+.gb-hud-sticky {
+    position: sticky;
+    top: 30vh;
+    margin-top: 30vh;
+    margin-bottom: 30vh;
+}
+
 .hud-chip {
     display: block;
     font-family: var(--font-pixel);
