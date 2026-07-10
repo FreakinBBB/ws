@@ -89,12 +89,45 @@ body.title-locked { overflow: hidden; }
 }
 #title-screen.hidden   { display: none; }
 
+/* DMG-style boot: the logo drops from the top in chunky steps,
+   holds, then the overlay hands over to the title screen */
+.boot-screen {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: var(--gb-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    animation: boot-hide 0.35s steps(2) 2.7s forwards;
+}
+@keyframes boot-hide { to { opacity: 0; visibility: hidden; } }
+.boot-logo {
+    font-family: var(--font-pixel);
+    font-size: clamp(1.6rem, 5vw, 2.7rem);
+    color: var(--gb-ink);
+    letter-spacing: 0.06em;
+    position: relative;
+    animation: boot-drop 1.9s steps(19, end) 0.3s both;
+}
+.boot-tm {
+    font-size: 0.45em;
+    position: absolute;
+    top: 0.1em;
+    right: -1.2em;
+}
+@keyframes boot-drop {
+    from { transform: translateY(-44vh); }
+    to   { transform: translateY(0); }
+}
+
 .title-content {
     text-align: center;
     position: relative;
     z-index: 1;
     opacity: 0;
-    animation: title-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
+    animation: title-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) 3s forwards;
 }
 @keyframes title-fade-up {
     from { opacity: 0; transform: translateY(20px); }
@@ -557,7 +590,12 @@ main { position: relative; z-index: 1; }
 .reveal.visible { opacity: 1; transform: translateY(0); }
 
 @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+    .boot-screen { display: none; }
     .reveal { opacity: 1; transform: none; }
 }
 

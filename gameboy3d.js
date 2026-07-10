@@ -470,6 +470,8 @@ function makeCartLabel(side, entries) {
    ------------------------------------------------------------ */
 function buildGameBoy(screenTexture) {
     const gb = new THREE.Group();
+    // physical controls → navigation actions (consumed by the raycaster)
+    const buttons = new Map();
 
     const bodyMat   = new THREE.MeshStandardMaterial({ color: COLORS.body, roughness: 0.55, metalness: 0.04 });
     const recessMat = new THREE.MeshStandardMaterial({ color: COLORS.recess, roughness: 0.6, metalness: 0.02 });
@@ -588,6 +590,11 @@ function buildGameBoy(screenTexture) {
     dpadDome.position.set(-1.5, -1.15, 0.97);
     dpadH.castShadow = dpadV.castShadow = true;
     gb.add(dpadH, dpadV, dpadDome);
+    // d-pad steps between sections; the direction is read from the hit point
+    const dpadAction = { type: 'dpad', cx: -1.5, cy: -1.15 };
+    buttons.set(dpadH, dpadAction);
+    buttons.set(dpadV, dpadAction);
+    buttons.set(dpadDome, dpadAction);
 
     /* --- A/B buttons on an angled recessed dish --- */
     const AB_TILT = -0.46;
@@ -615,6 +622,11 @@ function buildGameBoy(screenTexture) {
 
     const btnBase = new THREE.CylinderGeometry(0.42, 0.45, 0.2, 28);
     const btnCap = new THREE.SphereGeometry(0.42, 28, 14);
+    // A opens side A of the cart (articles), B opens side B (posters)
+    const abActions = {
+        A: { type: 'focus', sel: '#publications .pub-anchor-back' },
+        B: { type: 'focus', sel: '#publications .pub-anchor-front' },
+    };
     for (const [x, y, letter] of [[2.05, -0.85, 'A'], [1.0, -1.35, 'B']]) {
         const base = new THREE.Mesh(btnBase, abMat);
         base.rotation.x = Math.PI / 2;
@@ -624,6 +636,8 @@ function buildGameBoy(screenTexture) {
         cap.position.set(x, y, 0.94);
         base.castShadow = true;
         gb.add(base, cap);
+        buttons.set(base, abActions[letter]);
+        buttons.set(cap, abActions[letter]);
 
         const tag = makePrint(0.3, 0.3, (ctx, w, h) => {
             ctx.textAlign = 'center';
@@ -641,6 +655,7 @@ function buildGameBoy(screenTexture) {
     const pillGeo = new THREE.CapsuleGeometry(0.13, 0.5, 4, 12);
     const grooveGeo = new THREE.CapsuleGeometry(0.2, 0.52, 4, 12);
     const names = ['SELECT', 'START'];
+    const pillActions = [{ type: 'focus', sel: '#projects' }, { type: 'focus', sel: '#about' }];
     [-0.45, 0.45].forEach((dx, i) => {
         const groove = new THREE.Mesh(grooveGeo, recessMat);
         groove.rotation.z = Math.PI / 2 - 0.5;
@@ -653,6 +668,8 @@ function buildGameBoy(screenTexture) {
         pill.position.set(dx, -3.0, 0.78);
         pill.castShadow = true;
         gb.add(pill);
+        buttons.set(groove, pillActions[i]);
+        buttons.set(pill, pillActions[i]);
 
         const tag = makePrint(0.95, 0.24, (ctx, w, h) => {
             ctx.textAlign = 'center';
@@ -688,6 +705,7 @@ function buildGameBoy(screenTexture) {
     const power = new THREE.Mesh(new RoundedBoxGeometry(0.55, 0.16, 0.22, 2, 0.06), dpadMat);
     power.position.set(-1.75, 4.74, 0.12);
     gb.add(power);
+    buttons.set(power, { type: 'focus', sel: '#cv' });
 
     const jack = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.14, 20), dpadMat);
     jack.position.set(-0.7, -4.74, 0);
@@ -735,6 +753,7 @@ function buildGameBoy(screenTexture) {
     gb.userData.cartridge = cartridge;
     gb.userData.screen = screen;
     gb.userData.labels = [backLabel, frontLabel];
+    gb.userData.buttons = buttons;
 
     return gb;
 }
@@ -839,6 +858,7 @@ function init() {
        -------------------------------------------------------- */
     const screenMesh = gameboy.userData.screen;
     const labelApis = new Map(gameboy.userData.labels.map(l => [l.mesh, l]));
+    const buttonMap = gameboy.userData.buttons;
     const raycaster = new THREE.Raycaster();
     const ndc = new THREE.Vector2();
 
@@ -854,7 +874,20 @@ function init() {
         );
         raycaster.setFromCamera(ndc, camera);
         const hit = raycaster.intersectObject(gameboy, true)[0];
-        if (!hit || !hit.uv) return null;
+        if (!hit) return null;
+        const btn = buttonMap.get(hit.object);
+        if (btn) {
+            let action = btn;
+            if (btn.type === 'dpad') {
+                // read the pressed direction from where the d-pad was hit
+                const p = gameboy.worldToLocal(hit.point.clone());
+                const dx = p.x - btn.cx, dy = p.y - btn.cy;
+                const dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : -1) : (dy > 0 ? -1 : 1);
+                action = { type: 'nav', dir };
+            }
+            return { hotspot: { action }, label: null, mesh: hit.object };
+        }
+        if (!hit.uv) return null;
         if (hit.object === screenMesh) {
             const hs = screenCtl.hitTest(hit.uv.x, hit.uv.y);
             return hs && { hotspot: hs, label: null };
@@ -871,15 +904,36 @@ function init() {
         if (action.type === 'link') {
             if (action.href.startsWith('mailto:')) window.location.href = action.href;
             else window.open(encodeURI(action.href), '_blank', 'noopener');
-        } else if (action.type === 'scroll') {
+        } else if (action.type === 'focus' || action.type === 'scroll') {
+            // center the target so the camera settles exactly on its shot
             const target = document.querySelector(action.sel);
-            if (target) window.scrollTo({
-                top: target.getBoundingClientRect().top + window.scrollY - 90,
-                behavior: 'smooth',
-            });
+            if (target) {
+                const r = target.getBoundingClientRect();
+                window.scrollTo({
+                    top: r.top + window.scrollY + r.height / 2 - window.innerHeight / 2,
+                    behavior: 'smooth',
+                });
+            }
+        } else if (action.type === 'nav') {
+            // d-pad / arrows: step to the previous or next camera shot
+            const view = window.scrollY + window.innerHeight / 2;
+            let i = 0;
+            for (let k = 1; k < shots.length; k++) {
+                if (Math.abs(shotAnchor(shots[k]) - view) < Math.abs(shotAnchor(shots[i]) - view)) i = k;
+            }
+            const next = shots[THREE.MathUtils.clamp(i + action.dir, 0, shots.length - 1)];
+            window.scrollTo({ top: shotAnchor(next) - window.innerHeight / 2, behavior: 'smooth' });
         } else if (action.type === 'select') {
             screenCtl.pin(action.index);
         }
+    }
+
+    /* brief press-in nudge for a clicked physical control */
+    function pressButton(mesh) {
+        if (mesh.userData.pressed) return;
+        mesh.userData.pressed = true;
+        mesh.position.z -= 0.06;
+        setTimeout(() => { mesh.position.z += 0.06; mesh.userData.pressed = false; }, 150);
     }
 
     let cursorOn = false;
@@ -895,7 +949,30 @@ function init() {
 
     window.addEventListener('click', (ev) => {
         const found = pick(ev);
-        if (found) runAction(found.hotspot.action);
+        if (!found) return;
+        if (found.mesh) pressButton(found.mesh);
+        runAction(found.hotspot.action);
+    });
+
+    // emulator-style keys: arrows step sections, Enter=START, X=A, Z=B
+    window.addEventListener('keydown', (ev) => {
+        if (document.body.classList.contains('title-locked')) return;
+        if (ev.altKey || ev.ctrlKey || ev.metaKey) return;
+        const nav = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[ev.key];
+        if (nav) {
+            ev.preventDefault();
+            runAction({ type: 'nav', dir: nav });
+            return;
+        }
+        const focus = {
+            Enter: '#about',
+            x: '#publications .pub-anchor-back',  X: '#publications .pub-anchor-back',
+            z: '#publications .pub-anchor-front', Z: '#publications .pub-anchor-front',
+        }[ev.key];
+        if (focus) {
+            ev.preventDefault();
+            runAction({ type: 'focus', sel: focus });
+        }
     });
 
     // narrow screens: squeeze lateral offsets so the GB stays in frame
