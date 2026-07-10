@@ -65,220 +65,51 @@
             <p class="scroll-hint">[ SCROLL TO EXPLORE ]</p>
         </section>
 
-        <!-- About -->
+        <!-- About — plays on the Game Boy screen -->
         <section id="about" class="section panel-right">
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-chip">[ 01 ]</span>
-                    <h2 class="section-title">About</h2>
-                </div>
-                <div class="about-grid">
-                    <div class="about-card">
-                        <span class="card-dot" style="--dot: var(--blue)"></span>
-                        <span class="card-label">LV.29 · MEDIC</span>
-                        <h3>The Physician</h3>
-                        <p>
-                            Navigating the intricate pathways of the developing brain as a Resident in <strong>Children Neuropsychiatry</strong> at the University of Milan. I've honed my clinical instincts across major Italian pediatric centers—translating textbook neurology into real-world smiles.
-                        </p>
-                    </div>
-                    <div class="about-card">
-                        <span class="card-dot" style="--dot: var(--terra)"></span>
-                        <span class="card-label">TYPE: ELECTRIC</span>
-                        <h3>AI in Medicine</h3>
-                        <p>
-                            Because fixing bugs in code is slightly easier than fixing them in human DNA. I'm pursuing a Master's in <strong>Explainable AI in Healthcare</strong> (University of Pavia) and survived the CCAIM Clinical Summer School in Cambridge. Fluent in Python, R, Machine Learning, and translating geek-speak to doctors.
-                        </p>
-                    </div>
-                    <div class="about-card">
-                        <span class="card-dot" style="--dot: var(--sage)"></span>
-                        <span class="card-label">QUEST LOG</span>
-                        <h3>Research</h3>
-                        <p>
-                            From decoding epileptic encephalopathies to throwing kids into Virtual Reality (for science and neurorehabilitation, I promise). My research bridges AI diagnostics and clinical genetics, aiming to turn data into better clinical outcomes.
-                        </p>
-                    </div>
-                </div>
+            <div class="gb-hud">
+                <span class="hud-chip">[ 01 ]</span>
+                <h2 class="hud-title">About</h2>
+                <p class="hud-note">Trainer card on screen — physician by day, AI student by night, researcher in between.</p>
+                <p class="hud-screen">&gt; NOW PLAYING ON SCREEN</p>
+            </div>
+        </section>
 
-                <div class="priorities">
-                    <div class="priorities-head">
-                        <h3>Current priorities</h3>
-                        <p class="priorities-note">Three — not five, not ten. The constraint forces clarity.</p>
-                    </div>
-                    <div class="priorities-list">
-                        <div class="priority-row">
-                            <span class="priority-num">[ 01 ]</span>
-                            <span class="priority-text">Finish the residency strong</span>
-                            <span class="priority-meta">Milan · 2026</span>
-                        </div>
-                        <div class="priority-row">
-                            <span class="priority-num">[ 02 ]</span>
-                            <span class="priority-text">Master explainable AI</span>
-                            <span class="priority-meta">XAIM · Pavia</span>
-                        </div>
-                        <div class="priority-row">
-                            <span class="priority-num">[ 03 ]</span>
-                            <span class="priority-text">Ship the VR-rehab research</span>
-                            <span class="priority-meta">Data → outcomes</span>
-                        </div>
-                    </div>
+        <!-- Publications — the papers ARE the cartridge -->
+        <section id="publications" class="section panel-left">
+            <div class="gb-hud">
+                <span class="hud-chip">[ 02 ]</span>
+                <h2 class="hud-title">Papers</h2>
+                <p class="hud-note">The research is the cartridge itself — it pops out of the slot, publications printed on the label.</p>
+                <p class="hud-screen">&gt; CART LOADED IN SLOT</p>
+                <div class="hud-links">
+                    <a href="https://doi.org/10.1016/j.ejpn.2025.11.004" target="_blank" rel="noopener noreferrer" class="bracket-link">Aicardi Delphi '26 — DOI</a>
+                    <span class="hud-link-muted">COL4A1/A2 '25 — In review</span>
+                    <a href="Poster Carelab ENG final.pdf" download target="_blank" rel="noopener noreferrer" class="bracket-link">VR rehab in DCD '24 — Poster</a>
+                    <a href="Poster NAO ENG.pdf" download target="_blank" rel="noopener noreferrer" class="bracket-link">IOGIOCO '24 — Poster</a>
                 </div>
             </div>
         </section>
 
-        <!-- Publications -->
-        <section id="publications" class="section panel-right">
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-chip">[ 02 ]</span>
-                    <h2 class="section-title">Papers</h2>
-                </div>
-                <div class="publications-list">
-                    <article class="publication-card">
-                        <div class="pub-year">2026</div>
-                        <div class="pub-content">
-                            <h3>Refining Aicardi Syndrome Diagnostic Criteria: A Modified Delphi Study</h3>
-                            <p class="pub-authors">Masnada S; De Giorgis V; <strong>Carugo U</strong>; Bahi-Buisson N; Cavallin M; Corbett M; Formica M; Gecz J; Petros N; Perucca E; Pichiecchio A; Fusar Poli P; H. Sherr E; Van den Veyver IB; Zara F; Veggiotti P; Arzimanoglou A.</p>
-                            <p class="pub-journal">European Journal of Paediatric Neurology</p>
-                            <div class="pub-links">
-                                <a href="https://doi.org/10.1016/j.ejpn.2025.11.004" target="_blank" rel="noopener noreferrer" class="pub-link bracket-link">DOI</a>
-                            </div>
-                        </div>
-                    </article>
-                    <article class="publication-card">
-                        <div class="pub-year">2025</div>
-                        <div class="pub-content">
-                            <h3>Toward guidelines for COL4A1 and COL4A2 related disorders</h3>
-                            <p class="pub-authors">Bonaventura E; Marelli D; <strong>Carugo U</strong>; Politano D; Spaccini L; Parazzini C; Orcesi S; Tonduti D.</p>
-                            <p class="pub-journal">Pediatric Neurology (Submitted)</p>
-                            <div class="pub-links">
-                                <span class="pub-link">In Review</span>
-                            </div>
-                        </div>
-                    </article>
-                    <article class="publication-card">
-                        <div class="pub-year">2024</div>
-                        <div class="pub-content">
-                            <h3>VR Rehabilitation on Executive Functions in Children with DCD</h3>
-                            <p class="pub-authors"><strong>Carugo U</strong>; Purpura G; Di Giusto V; Cavalagli A; Zorzi CF; Marcialis C; Cavallini A.</p>
-                            <p class="pub-journal">Poster @ Fit4MedRob 2024, Rome</p>
-                            <div class="pub-links">
-                                <a href="Poster Carelab ENG final.pdf" download target="_blank" rel="noopener noreferrer" class="pub-link bracket-link">Poster</a>
-                            </div>
-                        </div>
-                    </article>
-                    <article class="publication-card">
-                        <div class="pub-year">2024</div>
-                        <div class="pub-content">
-                            <h3>IOGIOCO: Social Robot for Intransitive Gestures in ASD Children</h3>
-                            <p class="pub-authors"><strong>Carugo U</strong>; Annunziata S; Santos L; Caglio A; Geminiani A; Morey J; Pedrocchi A; Cavallini A.</p>
-                            <p class="pub-journal">Poster @ Fit4MedRob 2024, Rome</p>
-                            <div class="pub-links">
-                                <a href="Poster NAO ENG.pdf" download target="_blank" rel="noopener noreferrer" class="pub-link bracket-link">Poster</a>
-                            </div>
-                        </div>
-                    </article>
-                </div>
+        <!-- Projects — plays on the Game Boy screen -->
+        <section id="projects" class="section panel-right">
+            <div class="gb-hud">
+                <span class="hud-chip">[ 03 ]</span>
+                <h2 class="hud-title">Projects</h2>
+                <p class="hud-note">VR rehab, a digital Rey-Osterrieth, a social robot, a phase-III trial and a map of Milan's NPI units — cycling in the menu.</p>
+                <p class="hud-screen">&gt; NOW PLAYING ON SCREEN</p>
             </div>
         </section>
 
-        <!-- Projects -->
-        <section id="projects" class="section panel-left">
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-chip">[ 03 ]</span>
-                    <h2 class="section-title">Projects</h2>
-                </div>
-                <p class="group-label">▶ WORK PROJECTS</p>
-                <div class="projects-grid">
-                    <div class="project-card">
-                        <div class="project-blob" style="--proj: var(--blue)"></div>
-                        <h3>VR Neurorehabilitation</h3>
-                        <p>Virtual reality for executive-function rehabilitation in children with DCD.</p>
-                    </div>
-                    <div class="project-card">
-                        <div class="project-blob" style="--proj: var(--blue-deep)"></div>
-                        <h3>Digital Rey-Osterrieth</h3>
-                        <p>Validation study of a digital version of the Rey-Osterrieth Complex Figure comparing tablet- and paper-based administrations.</p>
-                    </div>
-                    <div class="project-card">
-                        <div class="project-blob" style="--proj: var(--sage)"></div>
-                        <h3>IOGIOCO</h3>
-                        <p>Social robot for intransitive gestures in children with Autism Spectrum Disorder.</p>
-                    </div>
-                    <div class="project-card">
-                        <div class="project-blob" style="--proj: var(--terra)"></div>
-                        <h3>Phase III Trial</h3>
-                        <p>Sub-investigator in a phase-III clinical trial. Visits, drug administration, monitoring.</p>
-                    </div>
-                </div>
-
-                <p class="group-label group-label-spaced">▶ PERSONAL PROJECTS</p>
-                <div class="projects-grid">
-                    <div class="project-card">
-                        <div class="project-blob" style="--proj: var(--plum)"></div>
-                        <h3>WHO-NPIA</h3>
-                        <p>A website map of Milan UONPIA (Child Neuropsychiatry Units).</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- CV -->
-        <section id="cv" class="section panel-right">
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-chip">[ 04 ]</span>
-                    <h2 class="section-title">CV</h2>
-                </div>
-                <div class="cv-content">
-                    <div class="cv-timeline">
-                        <div class="cv-item">
-                            <div class="cv-date">2025–2026</div>
-                            <div class="cv-details">
-                                <h3>Master XAIM – Explainable AI in Healthcare</h3>
-                                <p>University of Pavia (+ Frankfurt, Hannover, Keele, Ljubljana)</p>
-                            </div>
-                        </div>
-                        <div class="cv-item">
-                            <div class="cv-date">2024</div>
-                            <div class="cv-details">
-                                <h3>CCAIM Clinical Summer School</h3>
-                                <p>University of Cambridge, Cambridge Center for AI in Medicine</p>
-                            </div>
-                        </div>
-                        <div class="cv-item">
-                            <div class="cv-date">2022–2026</div>
-                            <div class="cv-details">
-                                <h3>Specialization in Children Neuropsychiatry</h3>
-                                <p>University of Milan</p>
-                                <ul class="cv-sublist">
-                                    <li>ASST Santi Paolo e Carlo (Regional Epilepsy Centre)</li>
-                                    <li>E. Medea Scientific Institute IRCCS "La Nostra Famiglia"</li>
-                                    <li>Fondazione IRCCS Ca' Granda Ospedale Maggiore Policlinico</li>
-                                    <li>Fondazione Don Carlo Gnocchi IRCCS</li>
-                                    <li>Vittore Buzzi Children's Hospital</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="cv-item">
-                            <div class="cv-date">2021–2022</div>
-                            <div class="cv-details">
-                                <h3>Traineeship Clinical Genetics Lab</h3>
-                                <p>Erasmus University Medical Center, Rotterdam</p>
-                            </div>
-                        </div>
-                        <div class="cv-item">
-                            <div class="cv-date">2015–2021</div>
-                            <div class="cv-details">
-                                <h3>Degree in Medicine and Surgery</h3>
-                                <p>University of Pavia</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="cv-download">
-                        <p>Want to see the boring, highly detailed specifics?</p>
-                        <a href="mailto:carugoumberto@gmail.com?subject=CV%20request" class="pill pill-dark">Ask for the full CV</a>
-                    </div>
+        <!-- CV — plays on the Game Boy screen -->
+        <section id="cv" class="section panel-left">
+            <div class="gb-hud">
+                <span class="hud-chip">[ 04 ]</span>
+                <h2 class="hud-title">CV</h2>
+                <p class="hud-note">Quest log on screen — Pavia to Rotterdam to Milan, with a Cambridge side quest.</p>
+                <p class="hud-screen">&gt; NOW PLAYING ON SCREEN</p>
+                <div class="hud-links">
+                    <a href="mailto:carugoumberto@gmail.com?subject=CV%20request" class="bracket-link">Ask for the full CV</a>
                 </div>
             </div>
         </section>
@@ -292,32 +123,17 @@
             </div>
         </section>
 
-        <!-- Contact -->
-        <section id="contact" class="section panel-left">
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-chip">[ 05 ]</span>
-                    <h2 class="section-title">Contact</h2>
-                </div>
-                <div class="contact-content">
-                    <div class="contact-message">
-                        <p class="contact-intro">Let's build<br>something<br><em>meaningful.</em></p>
-                        <p class="contact-sub">Always open to discussing research collaborations, AI in medicine, or just sharing a good chess game.</p>
-                    </div>
-                    <div class="contact-links">
-                        <a href="mailto:carugoumberto@gmail.com" class="contact-card">
-                            <h3>Email</h3>
-                            <p>carugoumberto@gmail.com</p>
-                        </a>
-                        <a href="https://www.linkedin.com/in/umbertocarugo/" target="_blank" rel="noopener noreferrer" class="contact-card">
-                            <h3>LinkedIn</h3>
-                            <p>Connect & Network</p>
-                        </a>
-                        <a href="https://github.com/FreakinBBB" target="_blank" rel="noopener noreferrer" class="contact-card">
-                            <h3>GitHub</h3>
-                            <p>Explore my code</p>
-                        </a>
-                    </div>
+        <!-- Contact — plays on the Game Boy screen -->
+        <section id="contact" class="section panel-right">
+            <div class="gb-hud">
+                <span class="hud-chip">[ 05 ]</span>
+                <h2 class="hud-title">Contact</h2>
+                <p class="hud-note">Always open to research collaborations, AI in medicine, or a good chess game.</p>
+                <p class="hud-screen">&gt; NOW PLAYING ON SCREEN</p>
+                <div class="hud-links">
+                    <a href="mailto:carugoumberto@gmail.com" class="bracket-link">Email — carugoumberto@gmail.com</a>
+                    <a href="https://www.linkedin.com/in/umbertocarugo/" target="_blank" rel="noopener noreferrer" class="bracket-link">LinkedIn</a>
+                    <a href="https://github.com/FreakinBBB" target="_blank" rel="noopener noreferrer" class="bracket-link">GitHub</a>
                 </div>
             </div>
         </section>
