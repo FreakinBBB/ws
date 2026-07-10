@@ -50,7 +50,38 @@ function makeScreenController() {
     let page = 'title';
     let fade = 0;   // white-out overlay right after a page flip
     let tick = 0;
+    let hover = null;                        // hotspot under the pointer
+    let pinned = { index: -1, until: 0 };    // menu row pinned by a click/tap
     const blink = () => (tick >> 2) & 1;
+
+    /* clickable areas per page, in canvas px (match the draw code below) */
+    const HOTSPOTS = {
+        title: [
+            { x: 130, y: 288, w: 220, h: 48, action: { type: 'scroll', sel: '#about' } },
+        ],
+        projects: [0, 1, 2, 3, 4].map(i => (
+            { x: 26, y: 81 + i * 34, w: 300, h: 34, menu: i, action: { type: 'select', index: i } }
+        )),
+        cv: [
+            { x: 130, y: 374, w: 220, h: 44, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com?subject=CV%20request' } },
+        ],
+        contact: [
+            { x: 26, y: 213, w: 290, h: 38, menu: 0, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
+            { x: 26, y: 251, w: 290, h: 38, menu: 1, action: { type: 'link', href: 'https://www.linkedin.com/in/umbertocarugo/' } },
+            { x: 26, y: 289, w: 290, h: 38, menu: 2, action: { type: 'link', href: 'https://github.com/FreakinBBB' } },
+            { x: 100, y: 376, w: 280, h: 40, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
+        ],
+        footer: [
+            { x: 170, y: 316, w: 140, h: 48, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
+        ],
+    };
+
+    /* menu selection: pointer hover wins, then a recent click, then auto-cycle */
+    function menuSel(count, cycleStep) {
+        if (hover && hover.menu != null) return hover.menu;
+        if (pinned.index >= 0 && performance.now() < pinned.until) return pinned.index % count;
+        return Math.floor(tick / cycleStep) % count;
+    }
 
     function band(title) {
         ctx.fillStyle = INK;
@@ -173,14 +204,14 @@ function makeScreenController() {
             if (blink()) {
                 ctx.fillStyle = INK;
                 ctx.font = P(12);
-                ctx.fillText('READ THE LABEL', W / 2, 330);
-                ctx.fillText('ON THE BACK', W / 2, 356);
+                ctx.fillText('SIDE A: ARTICLES', W / 2, 330);
+                ctx.fillText('SIDE B: POSTERS', W / 2, 356);
             }
         },
 
         projects() {
             band('PROJECTS');
-            const sel = Math.floor(tick / 14) % PROJECTS.length;
+            const sel = menuSel(PROJECTS.length, 14);
             menu(PROJECTS.map(p => p[0]), sel, 30, 98, 34, 14);
             ctx.strokeStyle = INK;
             ctx.lineWidth = 3;
@@ -228,7 +259,7 @@ function makeScreenController() {
             ctx.fillText("LET'S BUILD", 26, 104);
             ctx.fillText('SOMETHING', 26, 136);
             ctx.fillText('MEANINGFUL.', 26, 168);
-            const sel = Math.floor(tick / 10) % 3;
+            const sel = menuSel(3, 10);
             menu(['EMAIL', 'LINKEDIN', 'GITHUB'], sel, 30, 232, 38, 14);
             ctx.textAlign = 'center';
             ctx.fillStyle = MUTED;
@@ -258,6 +289,11 @@ function makeScreenController() {
         ctx.fillStyle = BG;
         ctx.fillRect(0, 0, W, H);
         (pages[page] || pages.title)();
+        // underline the hovered link so it reads as clickable
+        if (hover && hover.action.type === 'link') {
+            ctx.fillStyle = BLUE;
+            ctx.fillRect(hover.x + 6, hover.y + hover.h - 6, hover.w - 12, 4);
+        }
         if (fade > 0) {
             ctx.fillStyle = `rgba(230, 227, 220, ${fade.toFixed(2)})`;
             ctx.fillRect(0, 0, W, H);
@@ -271,8 +307,9 @@ function makeScreenController() {
     texture.anisotropy = 4;
     texture.magFilter = THREE.NearestFilter;
 
-    setInterval(() => { tick++; draw(); texture.needsUpdate = true; }, 160);
-    fontRedraws.push(() => { draw(); texture.needsUpdate = true; });
+    const redraw = () => { draw(); texture.needsUpdate = true; };
+    setInterval(() => { tick++; redraw(); }, 160);
+    fontRedraws.push(redraw);
 
     return {
         texture,
@@ -280,6 +317,24 @@ function makeScreenController() {
             if (next === page || !pages[next]) return;
             page = next;
             fade = 1;
+            hover = null;
+            pinned.index = -1;
+        },
+        /* uv → hotspot on the current page (u,v as returned by the raycaster) */
+        hitTest(u, v) {
+            const x = u * W, y = (1 - v) * H;
+            return (HOTSPOTS[page] || []).find(r =>
+                x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h
+            ) || null;
+        },
+        setHover(next) {
+            if (next === hover) return;
+            hover = next;
+            redraw();
+        },
+        pin(index) {
+            pinned = { index, until: performance.now() + 4000 };
+            redraw();
         },
     };
 }
@@ -336,10 +391,79 @@ function makePrint(w, h, drawFn, pxPerUnit = 110) {
         new THREE.PlaneGeometry(w, h),
         new THREE.MeshStandardMaterial({ map: texture, transparent: true, roughness: 0.6, metalness: 0 })
     );
+    mesh.userData.redraw = () => { draw(); texture.needsUpdate = true; };
     return mesh;
 }
 
 const css = (hex) => `#${hex.toString(16).padStart(6, '0')}`;
+
+/* Cartridge label with clickable publication rows. `entries` rows with an
+   href get a ">" affordance, a hover highlight and a raycast hotspot. */
+function makeCartLabel(side, entries) {
+    let hoverIdx = -1;
+    const rowTop = (i) => 0.30 + i * 0.30; // row baseline, as fraction of label height
+
+    const mesh = makePrint(2.6, 2.4, (ctx, w, h) => {
+        const P = (s) => `${s}px "Press Start 2P", monospace`;
+        ctx.fillStyle = css(COLORS.body);
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = css(COLORS.ink);
+        ctx.fillRect(0, 0, w, h * 0.16);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#e6e3dc';
+        ctx.font = P(h * 0.055);
+        ctx.fillText('CARUGO PAPERS', w / 2, h * 0.085);
+
+        entries.forEach((e, i) => {
+            const y = h * rowTop(i);
+            if (i === hoverIdx && e.href) {
+                ctx.fillStyle = '#93a9d6';
+                ctx.fillRect(w * 0.03, y - h * 0.055, w * 0.94, h * 0.2);
+            }
+            ctx.textAlign = 'left';
+            ctx.fillStyle = css(COLORS.ab);
+            ctx.font = P(h * 0.045);
+            ctx.fillText(e.year, w * 0.06, y);
+            ctx.fillStyle = css(COLORS.ink);
+            ctx.fillText(e.title, w * 0.25, y);
+            ctx.fillStyle = '#837b74';
+            ctx.font = P(h * 0.035);
+            ctx.fillText(e.venue, w * 0.25, y + h * 0.075);
+            if (e.href) {
+                ctx.textAlign = 'right';
+                ctx.fillStyle = css(COLORS.ab);
+                ctx.font = P(h * 0.045);
+                ctx.fillText('>', w * 0.96, y);
+            }
+        });
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#837b74';
+        ctx.font = P(h * 0.036);
+        ctx.fillText(side, w / 2, h * 0.94);
+    }, 220);
+
+    return {
+        mesh,
+        hitTest(uv) {
+            const cy = 1 - uv.y; // canvas-space y, 0 at the top of the label
+            for (let i = 0; i < entries.length; i++) {
+                if (!entries[i].href) continue;
+                const top = rowTop(i);
+                if (cy >= top - 0.08 && cy <= top + 0.14) {
+                    return { index: i, action: { type: 'link', href: entries[i].href } };
+                }
+            }
+            return null;
+        },
+        setHover(i) {
+            if (i === hoverIdx) return;
+            hoverIdx = i;
+            mesh.userData.redraw();
+        },
+    };
+}
 
 /* ------------------------------------------------------------
    Game Boy model — DMG-01 silhouette from primitives
@@ -582,45 +706,26 @@ function buildGameBoy(screenTexture) {
     cart.castShadow = true;
     cartridge.add(cart);
 
-    const cartLabel = makePrint(2.6, 2.4, (ctx, w, h) => {
-        // cream label with a blue header band — the publication list itself
-        ctx.fillStyle = css(COLORS.body);
-        ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = css(COLORS.ink);
-        ctx.fillRect(0, 0, w, h * 0.17);
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#e6e3dc';
-        ctx.font = `${h * 0.06}px "Press Start 2P", monospace`;
-        ctx.fillText('CARUGO PAPERS', w / 2, h * 0.09);
+    // side A (faces away from the console): the journal articles
+    const backLabel = makeCartLabel('SIDE A - ARTICLES', [
+        { year: '2026', title: 'AICARDI DELPHI',  venue: 'EUR J PAED NEUROL',
+          href: 'https://doi.org/10.1016/j.ejpn.2025.11.004' },
+        { year: '2025', title: 'COL4A1/A2 GUIDE', venue: 'PEDIATR NEUROL (IN REVIEW)',
+          href: null },
+    ]);
+    backLabel.mesh.rotation.y = Math.PI;
+    backLabel.mesh.position.set(0, 1.9, -1.105);
+    cartridge.add(backLabel.mesh);
 
-        const rows = [
-            ['2026', 'AICARDI DELPHI',  'EUR J PAED NEUROL'],
-            ['2025', 'COL4A1/A2 GUIDE', 'PEDIATR NEUROL'],
-            ['2024', 'VR REHAB IN DCD', 'FIT4MEDROB POSTER'],
-            ['2024', 'IOGIOCO NAO+ASD', 'FIT4MEDROB POSTER'],
-        ];
-        ctx.textAlign = 'left';
-        rows.forEach(([year, title, venue], i) => {
-            const y = h * (0.27 + i * 0.165);
-            ctx.fillStyle = css(COLORS.ab);
-            ctx.font = `${h * 0.043}px "Press Start 2P", monospace`;
-            ctx.fillText(year, w * 0.05, y);
-            ctx.fillStyle = css(COLORS.ink);
-            ctx.fillText(title, w * 0.235, y);
-            ctx.fillStyle = '#837b74';
-            ctx.font = `${h * 0.033}px "Press Start 2P", monospace`;
-            ctx.fillText(venue, w * 0.235, y + h * 0.06);
-        });
-
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#837b74';
-        ctx.font = `${h * 0.036}px "Press Start 2P", monospace`;
-        ctx.fillText('EST.1995 - 4 ENTRIES', w / 2, h * 0.95);
-    }, 220);
-    cartLabel.rotation.y = Math.PI;
-    cartLabel.position.set(0, 1.9, -1.105);
-    cartridge.add(cartLabel);
+    // side B (faces the console, revealed when the cart ejects): the posters
+    const frontLabel = makeCartLabel('SIDE B - POSTERS', [
+        { year: '2024', title: 'VR REHAB IN DCD', venue: 'FIT4MEDROB ROME',
+          href: 'Poster Carelab ENG final.pdf' },
+        { year: '2024', title: 'IOGIOCO NAO+ASD', venue: 'FIT4MEDROB ROME',
+          href: 'Poster NAO ENG.pdf' },
+    ]);
+    frontLabel.mesh.position.set(0, 1.9, -0.595);
+    cartridge.add(frontLabel.mesh);
 
     const cartNotch = new THREE.Mesh(new RoundedBoxGeometry(1.3, 0.35, 0.12, 2, 0.05), abMat);
     cartNotch.position.set(0, 3.85, -0.98);
@@ -628,23 +733,28 @@ function buildGameBoy(screenTexture) {
 
     gb.add(cartridge);
     gb.userData.cartridge = cartridge;
+    gb.userData.screen = screen;
+    gb.userData.labels = [backLabel, frontLabel];
 
     return gb;
 }
 
 /* ------------------------------------------------------------
    Camera shots — one per section. Content sections park the
-   camera on the screen (which plays that section's page);
-   Papers swings to the back where the cart pops out of the slot.
+   camera on the screen (which plays that section's page).
+   Papers has two phases: the cart fully ejects from the slot
+   (`rise`) and the camera reads side A (articles) from the back,
+   then swings around to side B (posters) on the front.
    ------------------------------------------------------------ */
 const SHOTS = [
-    { sel: '.hero',         pos: [8, 3.5, 15],      tgt: [-2.6, 0.2, 0],  orbit: 0.14, page: 'title' },   // full view, GB on the right
-    { sel: '#about',        pos: [1.7, 3.0, 7.6],   tgt: [0, 2.35, 0.5],  page: 'about' },                // screen: trainer card
-    { sel: '#publications', pos: [-1.6, 4.7, -8.8], tgt: [0, 4.0, -0.9],  page: 'papers', cartFocus: true }, // the papers cart, risen from the slot
-    { sel: '#projects',     pos: [-1.7, 1.8, 7.4],  tgt: [0, 2.3, 0.5],   page: 'projects' },             // screen: project menu
-    { sel: '#cv',           pos: [1.3, 2.0, 7.8],   tgt: [0, 2.35, 0.5],  page: 'cv' },                   // screen: quest log
-    { sel: '#contact',      pos: [-1.0, 2.8, 7.2],  tgt: [0, 2.35, 0.5],  page: 'contact' },              // screen: say hi
-    { sel: '.footer',       pos: [0, 1.5, 20],      tgt: [0, 0, 0],       orbit: 0.2, page: 'footer' },   // pull all the way back
+    { sel: '.hero',                          pos: [8, 3.5, 15],      tgt: [-2.6, 0.2, 0],  orbit: 0.14, page: 'title' },  // full view, GB on the right
+    { sel: '#about',                         pos: [1.7, 3.0, 7.6],   tgt: [0, 2.35, 0.5],  page: 'about' },               // screen: trainer card
+    { sel: '#publications .pub-anchor-back', pos: [-1.6, 7.0, -8.4], tgt: [0, 6.6, -0.9],  page: 'papers', rise: 4.7 },   // ejected cart, articles side
+    { sel: '#publications .pub-anchor-front',pos: [1.6, 7.2, 6.6],   tgt: [0, 6.6, -0.85], page: 'papers', rise: 4.7 },   // ejected cart, posters side
+    { sel: '#projects',                      pos: [-1.7, 1.8, 7.4],  tgt: [0, 2.3, 0.5],   page: 'projects' },            // screen: project menu
+    { sel: '#cv',                            pos: [1.3, 2.0, 7.8],   tgt: [0, 2.35, 0.5],  page: 'cv' },                  // screen: quest log
+    { sel: '#contact',                       pos: [-1.0, 2.8, 7.2],  tgt: [0, 2.35, 0.5],  page: 'contact' },             // screen: say hi
+    { sel: '.footer',                        pos: [0, 1.5, 20],      tgt: [0, 0, 0],       orbit: 0.2, page: 'footer' },  // pull all the way back
 ];
 
 const INTRO_POS = new THREE.Vector3(0, 2.35, 2.4); // right in front of the screen
@@ -710,7 +820,7 @@ function init() {
             tgt: new THREE.Vector3(...s.tgt),
             orbit: s.orbit || 0,
             page: s.page,
-            cartFocus: !!s.cartFocus,
+            rise: s.rise || 0,
         }))
         .filter(s => s.el);
 
@@ -721,6 +831,72 @@ function init() {
     }
     resize();
     window.addEventListener('resize', resize, { passive: true });
+
+    /* --------------------------------------------------------
+       Clickable 3D surfaces — the stage stays pointer-events:
+       none, so we raycast from document-level events instead.
+       Solid meshes occlude, so hidden hotspots can't be hit.
+       -------------------------------------------------------- */
+    const screenMesh = gameboy.userData.screen;
+    const labelApis = new Map(gameboy.userData.labels.map(l => [l.mesh, l]));
+    const raycaster = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+
+    // real page UI always wins over the 3D layer behind it
+    const UI_SELECTOR = 'a, button, input, textarea, .gb-hud, .nav, #title-screen, .manifesto, .footer-cta, .footer-inner';
+
+    function pick(ev) {
+        if (document.body.classList.contains('title-locked')) return null;
+        if (ev.target instanceof Element && ev.target.closest(UI_SELECTOR)) return null;
+        ndc.set(
+            (ev.clientX / window.innerWidth) * 2 - 1,
+            -(ev.clientY / window.innerHeight) * 2 + 1
+        );
+        raycaster.setFromCamera(ndc, camera);
+        const hit = raycaster.intersectObject(gameboy, true)[0];
+        if (!hit || !hit.uv) return null;
+        if (hit.object === screenMesh) {
+            const hs = screenCtl.hitTest(hit.uv.x, hit.uv.y);
+            return hs && { hotspot: hs, label: null };
+        }
+        const label = labelApis.get(hit.object);
+        if (label) {
+            const hs = label.hitTest(hit.uv);
+            return hs && { hotspot: hs, label };
+        }
+        return null;
+    }
+
+    function runAction(action) {
+        if (action.type === 'link') {
+            if (action.href.startsWith('mailto:')) window.location.href = action.href;
+            else window.open(encodeURI(action.href), '_blank', 'noopener');
+        } else if (action.type === 'scroll') {
+            const target = document.querySelector(action.sel);
+            if (target) window.scrollTo({
+                top: target.getBoundingClientRect().top + window.scrollY - 90,
+                behavior: 'smooth',
+            });
+        } else if (action.type === 'select') {
+            screenCtl.pin(action.index);
+        }
+    }
+
+    let cursorOn = false;
+    window.addEventListener('pointermove', (ev) => {
+        const found = pick(ev);
+        screenCtl.setHover(found && !found.label ? found.hotspot : null);
+        labelApis.forEach(api => api.setHover(found && found.label === api ? found.hotspot.index : -1));
+        if (!!found !== cursorOn) {
+            cursorOn = !!found;
+            document.body.style.cursor = cursorOn ? 'pointer' : '';
+        }
+    }, { passive: true });
+
+    window.addEventListener('click', (ev) => {
+        const found = pick(ev);
+        if (found) runAction(found.hotspot.action);
+    });
 
     // narrow screens: squeeze lateral offsets so the GB stays in frame
     const xScale = () => THREE.MathUtils.clamp(window.innerWidth / 1200, 0.4, 1);
@@ -779,10 +955,10 @@ function init() {
         desiredTgt.lerpVectors(A, B, t);
 
         // flip the GB screen to the section we're closest to,
-        // and pop the papers cartridge out near its section
+        // and eject the papers cartridge near its section
         const nearest = t < 0.5 ? a : b;
         if (nearest.page) screenCtl.setPage(nearest.page);
-        cartRise = (a.cartFocus ? 1 - t : 0) + (b.cartFocus ? t : 0);
+        cartRise = THREE.MathUtils.lerp(a.rise, b.rise, t);
 
         // idle orbit on the first/last shot, fading out as you scroll away
         let orbitAmt = 0;
@@ -809,7 +985,7 @@ function init() {
         computeScrollShot(time);
 
         // slide the papers cart in/out of its slot
-        cartridge.position.y += (cartRise * 2.3 - cartridge.position.y) * 0.1;
+        cartridge.position.y += (cartRise - cartridge.position.y) * 0.1;
 
         if (introStart !== null) {
             const k = THREE.MathUtils.clamp((performance.now() - introStart) / INTRO_MS, 0, 1);
