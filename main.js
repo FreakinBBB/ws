@@ -20,7 +20,11 @@ function initTitleScreen() {
     const screen = document.getElementById('title-screen');
     if (!screen) return;
 
+    let dismissed = false;
+
     function dismiss() {
+        if (dismissed) return;
+        dismissed = true;
         screen.classList.add('fade-out');
         document.body.classList.remove('title-locked');
         document.dispatchEvent(new CustomEvent('gb:start'));
@@ -109,18 +113,24 @@ function initSmoothScroll() {
    NAV ACTIVE HIGHLIGHT
    ============================================================ */
 function initNavHighlight() {
-    const sections = document.querySelectorAll('section[id]');
-    const links = document.querySelectorAll('.nav-links a');
+    const sections = [...document.querySelectorAll('section[id]')];
+    const links = [...document.querySelectorAll('.nav-links a')];
     if (!links.length) return;
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
-            links.forEach(link => {
-                link.classList.toggle('active', link.getAttribute('href') === `#${entry.target.id}`);
-            });
-        });
-    }, { threshold: 0.35, rootMargin: '-5% 0px -55% 0px' });
+    function updateActiveLink() {
+        const scrollLine = window.scrollY + window.innerHeight * 0.38;
+        let active = sections[0];
 
-    sections.forEach(s => observer.observe(s));
+        sections.forEach(section => {
+            if (section.offsetTop <= scrollLine) active = section;
+        });
+
+        links.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === `#${active.id}`);
+        });
+    }
+
+    updateActiveLink();
+    window.addEventListener('scroll', updateActiveLink, { passive: true });
+    window.addEventListener('resize', updateActiveLink, { passive: true });
 }
