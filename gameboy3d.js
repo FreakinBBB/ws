@@ -765,15 +765,17 @@ function buildGameBoy(screenTexture) {
    (`rise`) and the camera reads side A (articles) from the back,
    then swings around to side B (posters) on the front.
    ------------------------------------------------------------ */
+/* fitW: world-units that must fit across the viewport at the target —
+   on narrow (portrait) screens the camera is pushed back until it does */
 const SHOTS = [
-    { sel: '.hero',                          pos: [8, 3.5, 15],      tgt: [-2.6, 0.2, 0],  orbit: 0.14, page: 'title' },  // full view, GB on the right
-    { sel: '#about',                         pos: [1.7, 3.0, 7.6],   tgt: [0, 2.35, 0.5],  page: 'about' },               // screen: trainer card
-    { sel: '#publications .pub-anchor-back', pos: [-1.6, 7.0, -8.4], tgt: [0, 6.6, -0.9],  page: 'papers', rise: 4.7 },   // ejected cart, articles side
-    { sel: '#publications .pub-anchor-front',pos: [1.6, 7.2, 6.6],   tgt: [0, 6.6, -0.85], page: 'papers', rise: 4.7 },   // ejected cart, posters side
-    { sel: '#projects',                      pos: [-1.7, 1.8, 7.4],  tgt: [0, 2.3, 0.5],   page: 'projects' },            // screen: project menu
-    { sel: '#cv',                            pos: [1.3, 2.0, 7.8],   tgt: [0, 2.35, 0.5],  page: 'cv' },                  // screen: quest log
-    { sel: '#contact',                       pos: [-1.0, 2.8, 7.2],  tgt: [0, 2.35, 0.5],  page: 'contact' },             // screen: say hi
-    { sel: '.footer',                        pos: [0, 1.5, 20],      tgt: [0, 0, 0],       orbit: 0.2, page: 'footer' },  // pull all the way back
+    { sel: '.hero',                          pos: [8, 3.5, 15],      tgt: [-2.6, 0.2, 0],  orbit: 0.14, page: 'title', fitW: 7, lift: 1.2 },  // full view, GB on the right
+    { sel: '#about',                         pos: [1.7, 3.0, 7.6],   tgt: [0, 2.35, 0.5],  page: 'about', fitW: 4.6 },                        // screen: trainer card
+    { sel: '#publications .pub-anchor-back', pos: [-1.6, 7.0, -8.4], tgt: [0, 6.6, -0.9],  page: 'papers', rise: 4.7, fitW: 4.4, lift: 2.2 }, // ejected cart, articles side
+    { sel: '#publications .pub-anchor-front',pos: [1.6, 7.2, 6.6],   tgt: [0, 6.6, -0.85], page: 'papers', rise: 4.7, fitW: 4.4, lift: 2.2 }, // ejected cart, posters side
+    { sel: '#projects',                      pos: [-1.7, 1.8, 7.4],  tgt: [0, 2.3, 0.5],   page: 'projects', fitW: 4.6 },                     // screen: project menu
+    { sel: '#cv',                            pos: [1.3, 2.0, 7.8],   tgt: [0, 2.35, 0.5],  page: 'cv', fitW: 4.6 },                           // screen: quest log
+    { sel: '#contact',                       pos: [-1.0, 2.8, 7.2],  tgt: [0, 2.35, 0.5],  page: 'contact', fitW: 4.6 },                      // screen: say hi
+    { sel: '.footer',                        pos: [0, 1.5, 20],      tgt: [0, 0, 0],       orbit: 0.2, page: 'footer', fitW: 7, lift: 1 },    // pull all the way back
 ];
 
 const INTRO_POS = new THREE.Vector3(0, 2.35, 2.4); // right in front of the screen
@@ -795,7 +797,9 @@ function init() {
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
+    // soft shadows are the most expensive part of the frame — skip them on phones
+    const smallScreen = Math.min(window.innerWidth, window.innerHeight) < 600;
+    renderer.shadowMap.enabled = !smallScreen;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const scene = new THREE.Scene();
@@ -840,6 +844,8 @@ function init() {
             orbit: s.orbit || 0,
             page: s.page,
             rise: s.rise || 0,
+            fitW: s.fitW || 6,
+            lift: s.lift || 0,
         }))
         .filter(s => s.el);
 
@@ -1030,6 +1036,25 @@ function init() {
         A.copy(a.tgt); B.copy(b.tgt);
         A.x *= xs; B.x *= xs;
         desiredTgt.lerpVectors(A, B, t);
+
+        // portrait/narrow screens: push the camera back along its axis
+        // until the shot's frame width fits inside the viewport
+        const fitW = THREE.MathUtils.lerp(a.fitW, b.fitW, t);
+        const viewWPerUnit = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+        const dist = desiredPos.distanceTo(desiredTgt);
+        const needed = fitW / viewWPerUnit;
+        if (dist < needed) {
+            desiredPos.sub(desiredTgt).multiplyScalar(needed / dist).add(desiredTgt);
+        }
+
+        // ...and shift the frame down so the subject sits in the upper
+        // half, clear of the bottom-anchored HUD cards
+        const narrowK = THREE.MathUtils.clamp((1 - camera.aspect) / 0.55, 0, 1);
+        if (narrowK > 0) {
+            const lift = THREE.MathUtils.lerp(a.lift, b.lift, t) * narrowK;
+            desiredPos.y -= lift;
+            desiredTgt.y -= lift;
+        }
 
         // flip the GB screen to the section we're closest to,
         // and eject the papers cartridge near its section
