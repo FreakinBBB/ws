@@ -304,6 +304,7 @@ main { position: relative; z-index: 1; }
    ============================================================ */
 .hero {
     min-height: 100vh;
+    min-height: 100svh; /* stable height under mobile browser toolbars */
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -612,8 +613,22 @@ main { position: relative; z-index: 1; }
     }
     .nav-links { display: none; }
 
-    .hero { padding: 120px 24px 70px; }
-    .hero-sub { font-size: 1.02rem; }
+    /* hero text becomes a translucent card at the bottom, so it stays
+       readable over the 3D Game Boy instead of overlapping it */
+    .hero { padding: 110px 16px 90px; align-items: flex-end; }
+    .hero-content {
+        background: rgba(244, 239, 234, 0.85);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(15, 15, 15, 0.06);
+        border-radius: 22px;
+        padding: 26px 22px;
+        box-shadow: 0 24px 60px rgba(15, 15, 15, 0.12);
+    }
+    .hero-title { font-size: clamp(2.4rem, 10.5vw, 3.2rem); margin-bottom: 20px; }
+    .hero-sub { font-size: 1.02rem; margin-bottom: 18px; }
+    .hero-typing-wrap { margin-bottom: 28px; }
+    .scroll-hint { display: none; }
 
     /* the HUD drops to the bottom so the GB screen stays visible */
     .section {
@@ -623,6 +638,9 @@ main { position: relative; z-index: 1; }
     }
     .panel-right .gb-hud, .panel-left .gb-hud { margin-left: auto; margin-right: auto; }
     .gb-hud { padding: 24px 22px; }
+    .hud-note { font-size: 0.85rem; }
+    /* keep the sticky papers HUD in the lower half so the cart stays visible */
+    .gb-hud-sticky { top: 48vh; margin-bottom: 12vh; }
 
     .manifesto { padding: 90px 24px; }
 
