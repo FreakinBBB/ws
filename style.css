@@ -28,10 +28,10 @@
     --gb-bg:       #e6e3dc;
     --gb-ink:      #1c2a54;
 
-    --font-display: 'Fraunces', Georgia, serif;
+    --font-display: 'Instrument Sans', -apple-system, sans-serif;
     --font-main:    'Instrument Sans', -apple-system, sans-serif;
     --font-pixel:   'Press Start 2P', 'Courier New', monospace;
-    --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+    --font-mono:    'Instrument Sans', -apple-system, sans-serif;
 
     --radius:    24px;
     --radius-sm: 14px;
@@ -338,15 +338,15 @@ main { position: relative; z-index: 1; }
 .hero-title {
     font-family: var(--font-display);
     font-size: clamp(3.4rem, 9.5vw, 7.2rem);
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 0.98;
+    font-weight: 600;
+    letter-spacing: -0.055em;
+    line-height: 0.93;
     color: var(--ink);
     margin-bottom: 30px;
 }
 .hero-title em {
     font-style: italic;
-    font-weight: 400;
+    font-weight: 500;
     color: var(--blue);
 }
 
@@ -361,6 +361,8 @@ main { position: relative; z-index: 1; }
 .hero-typing-wrap {
     font-family: var(--font-mono);
     font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
     color: var(--muted);
     margin-bottom: 46px;
     min-height: 1.6em;
@@ -391,22 +393,7 @@ main { position: relative; z-index: 1; }
 
 .container { max-width: 1080px; margin: 0 auto; }
 
-.gb-hud {
-    width: min(360px, 100%);
-    background: rgba(244, 239, 234, 0.88);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(15, 15, 15, 0.06);
-    border-radius: 22px;
-    padding: 30px 32px;
-    box-shadow: 0 24px 60px rgba(15, 15, 15, 0.12);
-}
-.panel-right { justify-content: flex-end; }
-.panel-left  { justify-content: flex-start; }
-.panel-right .gb-hud { margin-right: 4vw; }
-.panel-left  .gb-hud { margin-left: 4vw; }
-
-/* Papers: two scroll phases (back label → front label) with a sticky HUD.
+/* Papers: two scroll phases (back label → front label).
    The invisible anchors are the camera targets for each phase. */
 .section.section-tall {
     min-height: 260vh;
@@ -422,47 +409,6 @@ main { position: relative; z-index: 1; }
     pointer-events: none;
 }
 .pub-anchor-front { top: 50%; }
-.gb-hud-sticky {
-    position: sticky;
-    top: 30vh;
-    margin-top: 30vh;
-    margin-bottom: 30vh;
-}
-
-.hud-chip {
-    display: block;
-    font-family: var(--font-pixel);
-    font-size: 0.6rem;
-    color: var(--blue);
-    letter-spacing: 0.08em;
-    margin-bottom: 14px;
-}
-.hud-title {
-    font-family: var(--font-display);
-    font-size: 2rem;
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 1;
-    color: var(--ink);
-    margin-bottom: 14px;
-}
-.hud-links {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-    margin-top: 18px;
-    padding-top: 18px;
-    border-top: 1px solid var(--line);
-}
-.hud-links a {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--ink-soft);
-}
-.hud-links a:hover { color: var(--blue); }
-.hud-link-muted { font-size: 0.85rem; color: var(--muted); }
-
 .pill { white-space: nowrap; }
 
 /* ============================================================
@@ -470,18 +416,20 @@ main { position: relative; z-index: 1; }
    ============================================================ */
 .footer {
     background: transparent;
-    color: var(--cream);
     padding: 55vh 40px 54px;
     position: relative;
     z-index: 1;
 }
 .footer-inner {
-    background: rgba(15, 15, 15, 0.92);
+    background:
+        radial-gradient(circle at 88% 10%, rgba(147, 169, 214, 0.7), transparent 28%),
+        linear-gradient(135deg, rgba(244, 239, 234, 0.98), rgba(226, 220, 216, 0.96));
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-radius: 28px;
     padding: 34px 40px;
-    border-top: none;
+    border: 1px solid rgba(29, 58, 110, 0.18);
+    box-shadow: 0 24px 70px rgba(29, 58, 110, 0.16);
 }
 .pill-cream { background: var(--cream); color: var(--ink); }
 .pill-cream:hover { background: var(--blue-light); }
@@ -494,37 +442,28 @@ main { position: relative; z-index: 1; }
     gap: 24px;
     flex-wrap: wrap;
     padding-top: 40px;
-    border-top: 1px solid rgba(244, 239, 234, 0.14);
+    border-top: 1px solid rgba(29, 58, 110, 0.12);
 }
 .footer-brand {
     font-family: var(--font-pixel);
     font-size: 0.72rem;
     letter-spacing: 0.06em;
-    color: var(--cream);
+    color: var(--blue-deep);
 }
 .footer-text {
     font-size: 0.88rem;
-    color: rgba(244, 239, 234, 0.75);
+    font-weight: 500;
+    color: var(--ink-soft);
 }
 .footer-copyright {
-    font-family: var(--font-pixel);
-    font-size: 0.5rem;
-    line-height: 2.1;
-    letter-spacing: 0.08em;
-    color: rgba(244, 239, 234, 0.55);
+    font-family: var(--font-main);
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.7;
+    letter-spacing: 0.04em;
+    color: var(--blue-deep);
     text-align: right;
 }
-
-/* ============================================================
-   REVEAL ANIMATION
-   ============================================================ */
-.reveal {
-    opacity: 0;
-    transform: translateY(28px);
-    transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.reveal.visible { opacity: 1; transform: translateY(0); }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -533,7 +472,6 @@ main { position: relative; z-index: 1; }
         transition-duration: 0.01ms !important;
     }
     .boot-screen { display: none; }
-    .reveal { opacity: 1; transform: none; }
 }
 
 /* ============================================================
@@ -566,17 +504,10 @@ main { position: relative; z-index: 1; }
     .hero-typing-wrap { margin-bottom: 28px; }
     .scroll-hint { display: none; }
 
-    /* the HUD drops to the bottom so the GB screen stays visible */
     .section {
         min-height: 130vh;
         padding: 14vh 16px 10vh;
-        align-items: flex-end;
     }
-    .panel-right .gb-hud, .panel-left .gb-hud { margin-left: auto; margin-right: auto; }
-    .gb-hud { padding: 24px 22px; }
-    /* keep the sticky papers HUD in the lower half so the cart stays visible */
-    .gb-hud-sticky { top: 48vh; margin-bottom: 12vh; }
-
 
     .footer-inner { flex-direction: column; text-align: center; }
     .footer-copyright { text-align: center; }
