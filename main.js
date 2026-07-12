@@ -7,7 +7,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     initTitleScreen();
     initTypingEffect();
-    initScrollAnimations();
     initSmoothScroll();
     initNavHighlight();
 });
@@ -43,11 +42,9 @@ function initTypingEffect() {
     if (!el) return;
 
     const phrases = [
-        'loading modules: [Child_Neuropsychiatry, AI, VR]...',
-        'whoami → Physician by day, Coder by night',
-        'import Explainable_AI as xAI',
-        'cat /etc/passions → {brain_plasticity, tech, gaming, chess}',
-        './initialize_research.sh',
+        'import nerd as bebo',
+        'developmental care = confusion ++',
+        'const (xAI + medicine) ',
     ];
 
     let pi = 0, ci = 0, deleting = false, speed = 80;
@@ -66,30 +63,6 @@ function initTypingEffect() {
         setTimeout(type, speed);
     }
     type();
-}
-
-/* ============================================================
-   SCROLL REVEAL
-   ============================================================ */
-function initScrollAnimations() {
-    const targets = document.querySelectorAll(
-        '.gb-hud'
-    );
-
-    targets.forEach(el => el.classList.add('reveal'));
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
-            const siblings = [...(entry.target.parentElement?.querySelectorAll(':scope > .reveal') || [])];
-            const idx = Math.max(siblings.indexOf(entry.target), 0);
-            entry.target.style.transitionDelay = `${idx * 0.07}s`;
-            entry.target.classList.add('visible');
-            observer.unobserve(entry.target);
-        });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-
-    targets.forEach(el => observer.observe(el));
 }
 
 /* ============================================================

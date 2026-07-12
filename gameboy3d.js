@@ -38,11 +38,13 @@ if (document.fonts && document.fonts.ready) {
    with a quick palette-fade like a real cartridge scene change.
    ------------------------------------------------------------ */
 function makeScreenController() {
+    // Layout is authored in a logical 480×432 space; the backing canvas is
+    // supersampled SS× so the type stays sharp when the camera moves close.
     const W = 480, H = 432; // 10:9 like the GB's 160×144
+    const SS = 3;
     const cv = document.createElement('canvas');
-    cv.width = W; cv.height = H;
+    cv.width = W * SS; cv.height = H * SS;
     const ctx = cv.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
 
     const BG = '#e6e3dc', INK = '#1c2a54', BLUE = '#3559a8', LIGHT = '#93a9d6', MUTED = '#8b93a6';
     const P = (size) => `${size}px "Press Start 2P", monospace`;
@@ -65,9 +67,9 @@ function makeScreenController() {
             { x: 130, y: 374, w: 220, h: 44, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com?subject=CV%20request' } },
         ],
         contact: [
-            { x: 26, y: 213, w: 290, h: 38, menu: 0, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
-            { x: 26, y: 251, w: 290, h: 38, menu: 1, action: { type: 'link', href: 'https://www.linkedin.com/in/umbertocarugo/' } },
-            { x: 26, y: 289, w: 290, h: 38, menu: 2, action: { type: 'link', href: 'https://github.com/FreakinBBB' } },
+            { x: 26, y: 213, w: 210, h: 38, menu: 0, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
+            { x: 26, y: 251, w: 210, h: 38, menu: 1, action: { type: 'link', href: 'https://www.linkedin.com/in/umbertocarugo/' } },
+            { x: 26, y: 289, w: 210, h: 38, menu: 2, action: { type: 'link', href: 'https://github.com/FreakinBBB' } },
             { x: 100, y: 376, w: 280, h: 40, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
         ],
         footer: [
@@ -80,28 +82,114 @@ function makeScreenController() {
         return hover && hover.menu != null ? hover.menu : -1;
     }
 
+    /* Centered page title in the top band, blinking like PRESS START. */
     function band(title) {
         ctx.fillStyle = INK;
         ctx.fillRect(0, 0, W, 56);
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = BG;
-        ctx.font = P(16);
-        ctx.fillText(title, 26, 32);
+        if (blink()) {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = BG;
+            ctx.font = P(16);
+            ctx.fillText(title, W / 2, 32);
+        }
     }
 
-    /* Pokémon-style menu with a cursor shown only on hover. */
+    /* Faint Pokémon-Center floor tiles: diamond lattice with small
+       hollow squares, drawn behind every page. */
+    function floorTiles() {
+        const t = 48;
+        ctx.strokeStyle = 'rgba(147, 169, 214, 0.22)';
+        ctx.lineWidth = 2;
+        for (let y = 0; y < H; y += t) {
+            for (let x = 0; x < W; x += t) {
+                ctx.beginPath();
+                ctx.moveTo(x + t / 2, y);
+                ctx.lineTo(x + t, y + t / 2);
+                ctx.lineTo(x + t / 2, y + t);
+                ctx.lineTo(x, y + t / 2);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.strokeRect(x + t / 2 - 5, y + t / 2 - 5, 10, 10);
+            }
+        }
+    }
+
+    /* Gen-1 style NPC sprite: the doctor, white coat over a blue shirt.
+       k=ink, f=face, w=coat, b=blue, .=transparent */
+    const DOC_SPRITE = [
+        '.....kkkkkk.....',
+        '...kkkkkkkkkk...',
+        '..kkkkkkkkkkkk..',
+        '..kkkkkkkkkkkk..',
+        '..kkffffffffkk..',
+        '..kffkffffkffk..',
+        '..kffffffffffk..',
+        '...kffffffffk...',
+        '..kkwwwwwwwwkk..',
+        '.kwwwwbbbbwwwwk.',
+        '.kwwwwbbbbwwwwk.',
+        '.kwwwwbbbbwwwwk.',
+        '..kwwwwwwwwwwk..',
+        '..kkbbkkkkbbkk..',
+        '...kbbk..kbbk...',
+        '...kkkk..kkkk...',
+    ];
+    function sprite(x, y, s) {
+        const pal = { k: INK, f: BG, w: '#f7f4ee', b: BLUE };
+        DOC_SPRITE.forEach((row, ry) => {
+            [...row].forEach((c, rx) => {
+                if (c === '.') return;
+                ctx.fillStyle = pal[c];
+                ctx.fillRect(x + rx * s, y + ry * s, s, s);
+            });
+        });
+    }
+
+    /* Gen-1 dialog frame: white box, thick rounded ink border with the
+       classic one-step light margin outside the line. */
+    function frame(x, y, fw, fh) {
+        ctx.fillStyle = '#f7f4ee';
+        ctx.beginPath();
+        ctx.roundRect(x, y, fw, fh, 12);
+        ctx.fill();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.roundRect(x + 4, y + 4, fw - 8, fh - 8, 9);
+        ctx.stroke();
+    }
+
+    /* Blinking ▼ "more text" marker, like the dialogue continue arrow. */
+    function marker(x, y) {
+        if (!blink()) return;
+        ctx.fillStyle = INK;
+        ctx.beginPath();
+        ctx.moveTo(x - 8, y);
+        ctx.lineTo(x + 8, y);
+        ctx.lineTo(x, y + 9);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    /* Pokémon-style menu: solid ▶ cursor on the hovered row. */
     function menu(items, sel, x, y, step, size) {
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.font = P(size);
         items.forEach((label, i) => {
+            const cy = y + i * step;
             if (i === sel) {
-                ctx.fillStyle = BLUE;
-                ctx.fillText('>', x, y + i * step);
+                ctx.fillStyle = INK;
+                ctx.beginPath();
+                ctx.moveTo(x, cy - size * 0.55);
+                ctx.lineTo(x, cy + size * 0.55);
+                ctx.lineTo(x + size * 0.8, cy);
+                ctx.closePath();
+                ctx.fill();
             }
-            ctx.fillStyle = i === sel ? INK : MUTED;
-            ctx.fillText(label, x + size * 1.6, y + i * step);
+            ctx.fillStyle = i === sel ? BLUE : INK;
+            ctx.fillText(label, x + size * 1.6, cy);
         });
     }
 
@@ -131,21 +219,41 @@ function makeScreenController() {
     ];
 
     const pages = {
+        /* Pokémon Yellow title screen: logo, "Special ... Edition"
+           ribbon, blinking PRESS START, GAME FREAK-style copyright. */
         title() {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = INK;
             ctx.font = P(14);
-            ctx.fillText('DR. UMBERTO', W / 2, 108);
+            ctx.fillText('DR. UMBERTO', W / 2, 100);
 
             // chunky blue logo with bevel
             ctx.font = P(46);
             ctx.fillStyle = INK;
-            ctx.fillText('CARUGO', W / 2 + 4, 178 + 4);
+            ctx.fillText('CARUGO', W / 2 + 4, 170 + 4);
             ctx.fillStyle = LIGHT;
-            ctx.fillText('CARUGO', W / 2, 178 - 3);
+            ctx.fillText('CARUGO', W / 2, 170 - 3);
             ctx.fillStyle = BLUE;
-            ctx.fillText('CARUGO', W / 2, 178);
+            ctx.fillText('CARUGO', W / 2, 170);
+
+            // "Special Pikachu Edition" style ribbon
+            const rw = 320, rh = 36, rx = (W - rw) / 2, ry = 212;
+            ctx.fillStyle = LIGHT;
+            ctx.beginPath();
+            ctx.roundRect(rx, ry, rw, rh, 18);
+            ctx.fill();
+            ctx.strokeStyle = INK;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.roundRect(rx + 3, ry + 3, rw - 6, rh - 6, 15);
+            ctx.stroke();
+            ctx.fillStyle = INK;
+            ctx.font = P(11);
+            ctx.fillText('SPECIAL MEDIC EDITION', W / 2, ry + rh / 2 + 1);
+
+            // the doctor NPC, waiting between the ribbon and PRESS START
+            sprite(W / 2 - 24, 252, 3);
 
             if (blink()) {
                 ctx.fillStyle = INK;
@@ -158,71 +266,86 @@ function makeScreenController() {
             ctx.fillText("©'96.'26 CARUGO inc.", W / 2, 398);
         },
 
+        /* Trainer card inside a dialog frame. */
         about() {
             band('ABOUT');
+            frame(18, 74, W - 36, 328);
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = INK;
             ctx.font = P(13);
-            ctx.fillText('NAME  UMBERTO CARUGO', 26, 96);
-            ctx.fillText('CLASS MEDIC LV.29', 26, 126);
-            ctx.fillText('TYPE  ELECTRIC', 26, 156);
+            ctx.fillText('CARUGO', 44, 112);
+            ctx.textAlign = 'right';
+            ctx.fillStyle = MUTED;
+            ctx.font = P(10);
+            ctx.fillText('MEDIC LV.29', W - 44, 112);
             ctx.fillStyle = LIGHT;
-            ctx.fillRect(26, 180, W - 52, 4);
+            ctx.fillRect(44, 136, W - 88, 4);
             const rows = [
                 ['PHYSICIAN',      'CHILD NPI @ MILAN'],
                 ['AI IN MEDICINE', 'XAIM MASTER @ PAVIA'],
                 ['RESEARCH',       'VR, GENETICS, DATA'],
             ];
             rows.forEach(([head, sub], i) => {
-                const y = 216 + i * 66;
+                const y = 176 + i * 68;
+                ctx.textAlign = 'left';
                 ctx.fillStyle = BLUE;
-                ctx.font = P(13);
-                ctx.fillText(`*${head}`, 26, y);
+                ctx.font = P(12);
+                ctx.fillText(`*${head}`, 44, y);
                 ctx.fillStyle = INK;
-                ctx.font = P(11);
-                ctx.fillText(sub, 48, y + 28);
+                ctx.font = P(10);
+                ctx.fillText(sub, 66, y + 26);
             });
+            marker(W - 60, 374);
         },
 
+        /* In-game item message + dialogue box. */
         papers() {
             band('PAPERS');
+            frame(18, 74, W - 36, 196);
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = INK;
-            ctx.font = P(13);
-            ctx.fillText('CART INSERTED:', W / 2, 150);
+            ctx.font = P(11);
+            ctx.fillText('CART INSERTED:', W / 2, 120);
             ctx.fillStyle = BLUE;
-            ctx.font = P(18);
-            ctx.fillText('CARUGO PAPERS', W / 2, 200);
+            ctx.font = P(17);
+            ctx.fillText('CARUGO PAPERS', W / 2, 164);
             ctx.fillStyle = MUTED;
-            ctx.font = P(10);
-            ctx.fillText('4 ENTRIES / VER.2026', W / 2, 244);
+            ctx.font = P(9);
+            ctx.fillText('4 ENTRIES / VER.2026', W / 2, 206);
+            marker(W - 52, 236);
+
+            frame(18, 296, W - 36, 118);
             if (blink()) {
                 ctx.fillStyle = INK;
-                ctx.font = P(12);
-                ctx.fillText('SIDE A: ARTICLES', W / 2, 330);
-                ctx.fillText('SIDE B: POSTERS', W / 2, 356);
+                ctx.font = P(11);
+                ctx.fillText('SIDE A: ARTICLES', W / 2, 338);
+                ctx.fillText('SIDE B: POSTERS', W / 2, 368);
             }
         },
 
+        /* Start-menu list + Pokédex-style description box. */
         projects() {
             band('PROJECTS');
+            frame(18, 66, W - 36, 190);
             const sel = menuSel();
             menu(PROJECTS.map(p => p[0]), sel, 30, 98, 34, 14);
-            ctx.strokeStyle = INK;
-            ctx.lineWidth = 3;
-            ctx.strokeRect(26, 290, W - 52, 118);
+
+            frame(18, 282, W - 36, 132);
             ctx.textAlign = 'left';
             ctx.fillStyle = INK;
             const detail = sel >= 0 ? PROJECTS[sel][1] : 'HOVER A PROJECT TO INSPECT';
             wrap(detail, 11, W - 104).slice(0, 3).forEach((line, i) => {
-                ctx.fillText(line, 46, 320 + i * 28);
+                ctx.fillText(line, 46, 316 + i * 26);
             });
+            if (sel >= 0) marker(W - 52, 388);
         },
 
+        /* Quest log inside one tall frame, CTA in its own box. */
         cv() {
-            band('CV / QUEST LOG');
+            band('CURRICULUM VITAE');
+            frame(18, 70, W - 36, 272);
             const rows = [
                 ['2025', 'XAIM MASTER, PAVIA'],
                 ['2024', 'CCAIM, CAMBRIDGE'],
@@ -233,59 +356,73 @@ function makeScreenController() {
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             rows.forEach(([year, text], i) => {
-                const y = 104 + i * 50;
+                const y = 106 + i * 48;
                 ctx.fillStyle = BLUE;
-                ctx.font = P(12);
-                ctx.fillText(year, 26, y);
+                ctx.font = P(11);
+                ctx.fillText(year, 44, y);
                 ctx.fillStyle = INK;
-                ctx.fillText(text, 92, y);
+                ctx.fillText(text, 108, y);
             });
+
+            frame(122, 366, 236, 52);
             if (blink()) {
                 ctx.textAlign = 'center';
-                ctx.fillStyle = MUTED;
+                ctx.fillStyle = INK;
                 ctx.font = P(10);
-                ctx.fillText('FULL CV: JUST ASK', W / 2, 396);
+                ctx.fillText('FULL CV: JUST ASK', W / 2, 393);
             }
         },
 
+        /* Dialogue box + start-menu style link list. */
         contact() {
             band('CONTACT');
+            frame(18, 70, W - 36, 122);
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = INK;
-            ctx.font = P(16);
-            ctx.fillText("LET'S BUILD", 26, 104);
-            ctx.fillText('SOMETHING', 26, 136);
-            ctx.fillText('MEANINGFUL.', 26, 168);
+            ctx.font = P(13);
+            ctx.fillText("LET'S BUILD", 44, 104);
+            ctx.fillText('SOMETHING', 44, 131);
+            ctx.fillText('MEANINGFUL.', 44, 158);
+            marker(W - 56, 168);
+
+            frame(18, 206, 226, 128);
             const sel = menuSel();
-            menu(['EMAIL', 'LINKEDIN', 'GITHUB'], sel, 30, 232, 38, 14);
+            menu(['EMAIL', 'LINKEDIN', 'GITHUB'], sel, 40, 232, 38, 13);
+
             ctx.textAlign = 'center';
             ctx.fillStyle = MUTED;
             ctx.font = P(10);
             ctx.fillText('CARUGOUMBERTO@GMAIL.COM', W / 2, 396);
         },
 
+        /* Hall of Fame style sign-off. */
         footer() {
+            frame(52, 96, W - 104, 140);
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = INK;
-            ctx.font = P(22);
-            ctx.fillText('THANKS FOR', W / 2, 140);
-            ctx.fillText('PLAYING!', W / 2, 184);
+            ctx.font = P(20);
+            ctx.fillText('THANKS FOR', W / 2, 144);
+            ctx.fillText('PLAYING!', W / 2, 186);
             ctx.fillStyle = MUTED;
             ctx.font = P(10);
-            ctx.fillText("©'96.'26 CARUGO inc.", W / 2, 258);
+            ctx.fillText("©'96.'26 CARUGO inc.", W / 2, 264);
+
+            frame(160, 306, 160, 64);
             if (blink()) {
                 ctx.fillStyle = BLUE;
                 ctx.font = P(13);
-                ctx.fillText('SAY HI!', W / 2, 340);
+                ctx.fillText('SAY HI!', W / 2, 338);
             }
         },
     };
 
     function draw() {
+        ctx.setTransform(SS, 0, 0, SS, 0, 0);
         ctx.fillStyle = BG;
         ctx.fillRect(0, 0, W, H);
+        floorTiles();
         (pages[page] || pages.title)();
         // underline the hovered link so it reads as clickable
         if (hover && hover.action.type === 'link') {
@@ -302,8 +439,9 @@ function makeScreenController() {
     draw();
     const texture = new THREE.CanvasTexture(cv);
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = 4;
-    texture.magFilter = THREE.NearestFilter;
+    texture.anisotropy = 16;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
 
     const redraw = () => { draw(); texture.needsUpdate = true; };
     setInterval(() => { tick++; redraw(); }, 160);
@@ -392,52 +530,129 @@ function makePrint(w, h, drawFn, pxPerUnit = 240) {
 
 const css = (hex) => `#${hex.toString(16).padStart(6, '0')}`;
 
-/* Cartridge label with clickable publication rows. `entries` rows with an
-   href get a ">" affordance, a hover highlight and a raycast hotspot. */
+/* Cartridge label with clickable publication rows, styled after the
+   classic DMG Tetris sticker: silver sticker base, dark starburst art
+   field, big outlined logo, vertical print on the margins. `entries`
+   rows with an href get a ">" affordance, a hover highlight and a
+   raycast hotspot. */
 function makeCartLabel(side, entries) {
     let hoverIdx = -1;
-    const rowTop = (i) => 0.30 + i * 0.30; // row baseline, as fraction of label height
+    const rowTop = (i) => 0.52 + i * 0.20; // row baseline, as fraction of label height
 
-    const mesh = makePrint(2.6, 2.4, (ctx, w, h) => {
+    const mesh = makePrint(2.6, 2.1, (ctx, w, h) => {
         const P = (s) => `${s}px "Press Start 2P", monospace`;
-        ctx.fillStyle = css(COLORS.body);
+
+        // silver sticker base with margins for the vertical print
+        ctx.fillStyle = '#d8d2cb';
         ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = css(COLORS.ink);
-        ctx.fillRect(0, 0, w, h * 0.16);
+
+        // dark art field
+        const fx = w * 0.085, fy = h * 0.045, fw = w * 0.83, fh = h * 0.87;
+        ctx.fillStyle = '#131c3f';
+        ctx.fillRect(fx, fy, fw, fh);
+
+        // starburst rays falling away from behind the logo
+        const vpx = fx + fw / 2, vpy = fy + fh * 0.34;
+        ctx.fillStyle = 'rgba(147, 169, 214, 0.18)';
+        [[0.00, 0.08], [0.20, 0.30], [0.44, 0.52], [0.66, 0.76], [0.90, 0.98]].forEach(([a, b]) => {
+            ctx.beginPath();
+            ctx.moveTo(vpx, vpy);
+            ctx.lineTo(fx + fw * a, fy + fh);
+            ctx.lineTo(fx + fw * b, fy + fh);
+            ctx.closePath();
+            ctx.fill();
+        });
+
+        // scattered stars
+        ctx.fillStyle = 'rgba(230, 227, 220, 0.75)';
+        [[0.10, 0.14], [0.86, 0.10], [0.20, 0.42], [0.90, 0.48], [0.06, 0.72],
+         [0.94, 0.80], [0.32, 0.90], [0.72, 0.93], [0.55, 0.44]].forEach(([x, y]) => {
+            ctx.fillRect(fx + fw * x, fy + fh * y, fw * 0.008, fw * 0.008);
+        });
+
+        // a few falling blocks along the edges
+        const bs = fw * 0.045;
+        [[0.05, 0.56, '#c0704e'], [0.92, 0.60, '#3559a8'], [0.06, 0.88, '#93a9d6'],
+         [0.88, 0.90, '#c0392b'], [0.46, 0.96, '#93a9d6']].forEach(([x, y, c]) => {
+            ctx.fillStyle = c;
+            ctx.fillRect(fx + fw * x, fy + fh * y, bs, bs);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+            ctx.lineWidth = Math.max(1, fw * 0.004);
+            ctx.strokeRect(fx + fw * x, fy + fh * y, bs, bs);
+        });
+
+        // TETRIS-style logo: small eyebrow + big outlined wordmark
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#e6e3dc';
-        ctx.font = P(h * 0.055);
-        ctx.fillText('CARUGO PAPERS', w / 2, h * 0.085);
+        ctx.font = P(h * 0.042);
+        ctx.fillText('CARUGO', vpx, fy + fh * 0.10);
+        ctx.font = P(h * 0.105);
+        ctx.lineWidth = h * 0.024;
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#e6e3dc';
+        ctx.strokeText('PAPERS', vpx, fy + fh * 0.24);
+        ctx.fillStyle = '#c0392b';
+        ctx.fillText('PAPERS', vpx, fy + fh * 0.24);
 
         entries.forEach((e, i) => {
             const y = h * rowTop(i);
             if (i === hoverIdx && e.href) {
-                ctx.fillStyle = '#93a9d6';
-                ctx.fillRect(w * 0.03, y - h * 0.055, w * 0.94, h * 0.2);
+                ctx.fillStyle = 'rgba(147, 169, 214, 0.30)';
+                ctx.fillRect(fx + fw * 0.02, y - h * 0.05, fw * 0.96, h * 0.16);
             }
             ctx.textAlign = 'left';
-            ctx.fillStyle = css(COLORS.ab);
-            ctx.font = P(h * 0.045);
-            ctx.fillText(e.year, w * 0.06, y);
-            ctx.fillStyle = css(COLORS.ink);
-            ctx.fillText(e.title, w * 0.25, y);
-            ctx.fillStyle = '#837b74';
-            ctx.font = P(h * 0.035);
-            ctx.fillText(e.venue, w * 0.25, y + h * 0.075);
+            ctx.fillStyle = '#93a9d6';
+            ctx.font = P(h * 0.036);
+            ctx.fillText(e.year, fx + fw * 0.04, y);
+            // auto-shrink the title into its centred column
+            let titleSize = h * 0.042;
+            ctx.font = P(titleSize);
+            while (ctx.measureText(e.title).width > fw * 0.58 && titleSize > h * 0.024) {
+                titleSize -= 1;
+                ctx.font = P(titleSize);
+            }
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#e6e3dc';
+            ctx.fillText(e.title, fx + fw * 0.55, y);
+            let venueSize = h * 0.028;
+            ctx.font = P(venueSize);
+            while (ctx.measureText(e.venue).width > fw * 0.74 && venueSize > h * 0.017) {
+                venueSize -= 1;
+                ctx.font = P(venueSize);
+            }
+            ctx.fillStyle = '#8b93a6';
+            ctx.fillText(e.venue, fx + fw * 0.55, y + h * 0.06);
             if (e.href) {
                 ctx.textAlign = 'right';
-                ctx.fillStyle = css(COLORS.ab);
-                ctx.font = P(h * 0.045);
-                ctx.fillText('>', w * 0.96, y);
+                ctx.fillStyle = '#c0704e';
+                ctx.font = P(h * 0.042);
+                ctx.fillText('>', fx + fw * 0.97, y);
             }
         });
 
+        // bottom line inside the art field, like MADE IN JAPAN
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#837b74';
-        ctx.font = P(h * 0.036);
-        ctx.fillText(side, w / 2, h * 0.94);
-    }, 220);
+        ctx.fillStyle = '#8b93a6';
+        ctx.font = P(h * 0.026);
+        ctx.fillText(side, vpx, fy + fh - h * 0.045);
+
+        // sticker margins: vertical print, reading bottom-to-top
+        ctx.fillStyle = '#7d766f';
+        ctx.font = P(h * 0.024);
+        ctx.save();
+        ctx.translate(w * 0.0425, h * 0.5);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('DWG. UC-ITA', 0, 0);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(w * 0.958, h * 0.5);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('THIS SIDE OUT', 0, 0);
+        ctx.restore();
+        ctx.textAlign = 'center';
+        ctx.fillText('MADE IN ITALY', w / 2, h * 0.962);
+    }, 300);
 
     return {
         mesh,
@@ -446,7 +661,7 @@ function makeCartLabel(side, entries) {
             for (let i = 0; i < entries.length; i++) {
                 if (!entries[i].href) continue;
                 const top = rowTop(i);
-                if (cy >= top - 0.08 && cy <= top + 0.14) {
+                if (cy >= top - 0.07 && cy <= top + 0.12) {
                     return { index: i, action: { type: 'link', href: entries[i].href } };
                 }
             }
@@ -520,27 +735,30 @@ function buildGameBoy(screenTexture) {
 
     const bezelPrint = makePrint(4.7, 4.2, (ctx, w, h) => {
         const px = (u) => (u / 4.7) * w;
-        // twin accent stripes across the top
+        // twin accent stripes across the top, DMG style
+        const s1 = h * 0.048, s2 = h * 0.086, st = h * 0.010;
         ctx.fillStyle = '#93a9d6';
-        ctx.fillRect(px(0.18), h * 0.045, w - px(0.36), h * 0.008);
+        ctx.fillRect(px(0.16), s1, w - px(0.32), st);
         ctx.fillStyle = '#c0704e';
-        ctx.fillRect(px(0.18), h * 0.082, w - px(0.36), h * 0.008);
-        // clear a gap and print the tagline between the stripes
-        ctx.font = `italic 700 ${h * 0.032}px 'Instrument Sans', sans-serif`;
+        ctx.fillRect(px(0.16), s2, w - px(0.32), st);
+        // clear a gap and print the tagline centred on the stripes
+        ctx.font = `italic 700 ${h * 0.034}px 'Instrument Sans', sans-serif`;
+        ctx.letterSpacing = `${h * 0.004}px`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        const label = 'DOT MATRIX WITH STEREO SOUND';
+        const label = 'NEURO MATRIX WITH HUMAN SOUND';
+        const mid = (s1 + s2 + st) / 2;
         const tw = ctx.measureText(label).width;
-        ctx.clearRect(w / 2 - tw / 2 - px(0.08), h * 0.02, tw + px(0.16), h * 0.09);
+        ctx.clearRect(w / 2 - tw / 2 - px(0.10), h * 0.028, tw + px(0.20), h * 0.088);
         ctx.fillStyle = '#d9d2ce';
-        ctx.fillText(label, w / 2, h * 0.066);
-        // Battery legend: use the LED's model-space x position so the label
-        // remains optically centred directly beneath it.
-        ctx.font = `600 ${h * 0.024}px 'Instrument Sans', sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('BATTERY', px(0.37), h * 0.535);
-    });
+        ctx.fillText(label, w / 2, mid);
+        // Battery legend: centred under the LED, sized to stay inside the
+        // strip left of the screen (screen glass starts 0.55 units in).
+        ctx.font = `600 ${h * 0.017}px 'Instrument Sans', sans-serif`;
+        ctx.letterSpacing = `${h * 0.002}px`;
+        ctx.fillStyle = '#d9d2ce';
+        ctx.fillText('BATTERY', px(0.37), h * 0.49);
+    }, 320);
     bezelPrint.position.set(0, 2.35, 0.851);
     gb.add(bezelPrint);
 
@@ -559,20 +777,6 @@ function buildGameBoy(screenTexture) {
     );
     led.position.set(-1.98, 2.6, 0.865);
     gb.add(led);
-
-    /* --- logo print under the screen --- */
-    const logo = makePrint(3.3, 0.42, (ctx, w, h) => {
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = css(COLORS.ink);
-        ctx.font = `italic 700 ${h * 0.72}px 'Instrument Sans', sans-serif`;
-        ctx.fillText('CARUGO BOY', w / 2, h * 0.52);
-        const tw = ctx.measureText('CARUGO BOY').width;
-        ctx.font = `700 ${h * 0.26}px 'Instrument Sans', sans-serif`;
-        ctx.fillText('™', w / 2 + tw / 2 + h * 0.22, h * 0.3);
-    });
-    logo.position.set(0, -0.02, 0.755);
-    gb.add(logo);
 
     /* --- D-pad in a circular recess --- */
     const dpadDish = new THREE.Mesh(new THREE.CircleGeometry(1.16, 40), recessMat);
@@ -705,15 +909,6 @@ function buildGameBoy(screenTexture) {
     power.position.set(-1.75, 4.74, 0.12);
     gb.add(power);
     buttons.set(power, { type: 'focus', sel: '#cv' });
-    const powerTag = makePrint(0.6, 0.2, (ctx, w, h) => {
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = css(COLORS.ink);
-        ctx.font = `600 ${h * 0.62}px 'Instrument Sans', sans-serif`;
-        ctx.fillText('CV', w / 2, h * 0.55);
-    });
-    powerTag.position.set(-1.75, 4.45, 0.752);
-    gb.add(powerTag);
 
     const jack = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.14, 20), dpadMat);
     jack.position.set(-0.7, -4.74, 0);
@@ -727,20 +922,65 @@ function buildGameBoy(screenTexture) {
 
     const cartridge = new THREE.Group();
 
-    const cart = new THREE.Mesh(new RoundedBoxGeometry(3.4, 3.6, 0.5, 3, 0.1), abMat);
+    // grey shell like the classic DMG Game Pak
+    const cartMat = new THREE.MeshStandardMaterial({ color: COLORS.recess, roughness: 0.55, metalness: 0.03 });
+    const cart = new THREE.Mesh(new RoundedBoxGeometry(3.4, 3.6, 0.5, 3, 0.1), cartMat);
     cart.position.set(0, 2.0, -0.85);
     cart.castShadow = true;
     cartridge.add(cart);
+
+    // grip ridges along the top, wrapping both faces
+    const ridgeGeo = new RoundedBoxGeometry(3.06, 0.07, 0.56, 1, 0.03);
+    for (let i = 0; i < 4; i++) {
+        const ridge = new THREE.Mesh(ridgeGeo, cartMat);
+        ridge.position.set(0, 3.66 - i * 0.12, -0.85);
+        cartridge.add(ridge);
+    }
+
+    // embossed brand band under the ridges, printed on both faces
+    const bandPlate = new THREE.Mesh(new RoundedBoxGeometry(2.9, 0.34, 0.54, 2, 0.05), cartMat);
+    bandPlate.position.set(0, 3.02, -0.85);
+    cartridge.add(bandPlate);
+    for (const [z, flip] of [[-0.575, false], [-1.125, true]]) {
+        const brand = makePrint(2.7, 0.3, (ctx, w, h) => {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#8f867d';
+            ctx.font = `italic 700 ${h * 0.5}px 'Instrument Sans', sans-serif`;
+            ctx.fillText('Carugo GAME BOY™', w / 2, h * 0.55);
+        });
+        brand.position.set(0, 3.02, z);
+        if (flip) brand.rotation.y = Math.PI;
+        cartridge.add(brand);
+    }
+
+    // moulded arrow below the label, pointing at the slot
+    for (const [z, flip] of [[-0.593, false], [-1.107, true]]) {
+        const arrow = makePrint(0.44, 0.32, (ctx, w, h) => {
+            ctx.strokeStyle = '#a49b92';
+            ctx.lineWidth = h * 0.1;
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(w * 0.16, h * 0.16);
+            ctx.lineTo(w * 0.84, h * 0.16);
+            ctx.lineTo(w * 0.5, h * 0.86);
+            ctx.closePath();
+            ctx.stroke();
+        });
+        arrow.position.set(0, 0.42, z);
+        if (flip) arrow.rotation.y = Math.PI;
+        cartridge.add(arrow);
+    }
 
     // side A (faces away from the console): the journal articles
     const backLabel = makeCartLabel('SIDE A - ARTICLES', [
         { year: '2026', title: 'AICARDI DELPHI',  venue: 'EUR J PAED NEUROL',
           href: 'https://doi.org/10.1016/j.ejpn.2025.11.004' },
-        { year: '2025', title: 'COL4A1/A2 GUIDE', venue: 'PEDIATR NEUROL (IN REVIEW)',
+        { year: '2025', title: 'COL4A1 / A2', venue: 'CLINICAL GUIDE · IN REVIEW',
           href: null },
     ]);
     backLabel.mesh.rotation.y = Math.PI;
-    backLabel.mesh.position.set(0, 1.9, -1.105);
+    backLabel.mesh.position.set(0, 1.7, -1.105);
     cartridge.add(backLabel.mesh);
 
     // side B (faces the console, revealed when the cart ejects): the posters
@@ -750,12 +990,8 @@ function buildGameBoy(screenTexture) {
         { year: '2024', title: 'IOGIOCO NAO+ASD', venue: 'FIT4MEDROB ROME',
           href: 'Poster NAO ENG.pdf' },
     ]);
-    frontLabel.mesh.position.set(0, 1.9, -0.595);
+    frontLabel.mesh.position.set(0, 1.7, -0.595);
     cartridge.add(frontLabel.mesh);
-
-    const cartNotch = new THREE.Mesh(new RoundedBoxGeometry(1.3, 0.35, 0.12, 2, 0.05), abMat);
-    cartNotch.position.set(0, 3.85, -0.98);
-    cartridge.add(cartNotch);
 
     gb.add(cartridge);
     gb.userData.cartridge = cartridge;
@@ -877,7 +1113,7 @@ function init() {
     const ndc = new THREE.Vector2();
 
     // real page UI always wins over the 3D layer behind it
-    const UI_SELECTOR = 'a, button, input, textarea, .gb-hud, .nav, #title-screen, .footer-inner';
+    const UI_SELECTOR = 'a, button, input, textarea, .nav, #title-screen, .footer-inner';
 
     function pick(ev) {
         if (document.body.classList.contains('title-locked')) return null;
