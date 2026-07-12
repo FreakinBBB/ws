@@ -51,7 +51,6 @@ function makeScreenController() {
     let fade = 0;   // white-out overlay right after a page flip
     let tick = 0;
     let hover = null;                        // hotspot under the pointer
-    let pinned = { index: -1, until: 0 };    // menu row pinned by a click/tap
     const blink = () => (tick >> 2) & 1;
 
     /* clickable areas per page, in canvas px (match the draw code below) */
@@ -76,11 +75,9 @@ function makeScreenController() {
         ],
     };
 
-    /* menu selection: pointer hover wins, then a recent click, then auto-cycle */
-    function menuSel(count, cycleStep) {
-        if (hover && hover.menu != null) return hover.menu;
-        if (pinned.index >= 0 && performance.now() < pinned.until) return pinned.index % count;
-        return Math.floor(tick / cycleStep) % count;
+    /* Menu rows are intentionally passive: they light up only under the pointer. */
+    function menuSel() {
+        return hover && hover.menu != null ? hover.menu : -1;
     }
 
     function band(title) {
@@ -93,7 +90,7 @@ function makeScreenController() {
         ctx.fillText(title, 26, 32);
     }
 
-    /* Pokémon-style menu with a cycling ">" cursor */
+    /* Pokémon-style menu with a cursor shown only on hover. */
     function menu(items, sel, x, y, step, size) {
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
@@ -158,7 +155,7 @@ function makeScreenController() {
 
             ctx.fillStyle = INK;
             ctx.font = P(10);
-            ctx.fillText("©'95.'26 CARUGO inc.", W / 2, 398);
+            ctx.fillText("©'96.'26 CARUGO inc.", W / 2, 398);
         },
 
         about() {
@@ -211,14 +208,15 @@ function makeScreenController() {
 
         projects() {
             band('PROJECTS');
-            const sel = menuSel(PROJECTS.length, 14);
+            const sel = menuSel();
             menu(PROJECTS.map(p => p[0]), sel, 30, 98, 34, 14);
             ctx.strokeStyle = INK;
             ctx.lineWidth = 3;
             ctx.strokeRect(26, 290, W - 52, 118);
             ctx.textAlign = 'left';
             ctx.fillStyle = INK;
-            wrap(PROJECTS[sel][1], 11, W - 104).slice(0, 3).forEach((line, i) => {
+            const detail = sel >= 0 ? PROJECTS[sel][1] : 'HOVER A PROJECT TO INSPECT';
+            wrap(detail, 11, W - 104).slice(0, 3).forEach((line, i) => {
                 ctx.fillText(line, 46, 320 + i * 28);
             });
         },
@@ -259,7 +257,7 @@ function makeScreenController() {
             ctx.fillText("LET'S BUILD", 26, 104);
             ctx.fillText('SOMETHING', 26, 136);
             ctx.fillText('MEANINGFUL.', 26, 168);
-            const sel = menuSel(3, 10);
+            const sel = menuSel();
             menu(['EMAIL', 'LINKEDIN', 'GITHUB'], sel, 30, 232, 38, 14);
             ctx.textAlign = 'center';
             ctx.fillStyle = MUTED;
@@ -276,7 +274,7 @@ function makeScreenController() {
             ctx.fillText('PLAYING!', W / 2, 184);
             ctx.fillStyle = MUTED;
             ctx.font = P(10);
-            ctx.fillText("©'95.'26 CARUGO inc.", W / 2, 258);
+            ctx.fillText("©'96.'26 CARUGO inc.", W / 2, 258);
             if (blink()) {
                 ctx.fillStyle = BLUE;
                 ctx.font = P(13);
@@ -318,7 +316,6 @@ function makeScreenController() {
             page = next;
             fade = 1;
             hover = null;
-            pinned.index = -1;
         },
         /* uv → hotspot on the current page (u,v as returned by the raycaster) */
         hitTest(u, v) {
@@ -330,10 +327,6 @@ function makeScreenController() {
         setHover(next) {
             if (next === hover) return;
             hover = next;
-            redraw();
-        },
-        pin(index) {
-            pinned = { index, until: performance.now() + 4000 };
             redraw();
         },
     };
@@ -370,7 +363,7 @@ function weldedSmooth(geometry) {
 }
 
 /* Transparent canvas print (labels, logos) as a plane mesh. */
-function makePrint(w, h, drawFn, pxPerUnit = 110) {
+function makePrint(w, h, drawFn, pxPerUnit = 240) {
     const cv = document.createElement('canvas');
     cv.width = Math.round(w * pxPerUnit);
     cv.height = Math.round(h * pxPerUnit);
@@ -384,7 +377,9 @@ function makePrint(w, h, drawFn, pxPerUnit = 110) {
 
     const texture = new THREE.CanvasTexture(cv);
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = 4;
+    texture.anisotropy = 8;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
     fontRedraws.push(() => { draw(); texture.needsUpdate = true; });
 
     const mesh = new THREE.Mesh(
@@ -539,9 +534,12 @@ function buildGameBoy(screenTexture) {
         ctx.clearRect(w / 2 - tw / 2 - px(0.08), h * 0.02, tw + px(0.16), h * 0.09);
         ctx.fillStyle = '#d9d2ce';
         ctx.fillText(label, w / 2, h * 0.066);
-        // battery label under the LED
+        // Battery legend: use the LED's model-space x position so the label
+        // remains optically centred directly beneath it.
         ctx.font = `600 ${h * 0.024}px 'Instrument Sans', sans-serif`;
-        ctx.fillText('BATTERY', px(0.37), h * 0.512);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('BATTERY', px(0.37), h * 0.535);
     });
     bezelPrint.position.set(0, 2.35, 0.851);
     gb.add(bezelPrint);
@@ -627,6 +625,7 @@ function buildGameBoy(screenTexture) {
         A: { type: 'focus', sel: '#publications .pub-anchor-back' },
         B: { type: 'focus', sel: '#publications .pub-anchor-front' },
     };
+    const abLabels = { A: 'ARTICLES', B: 'POSTERS' };
     for (const [x, y, letter] of [[2.05, -0.85, 'A'], [1.0, -1.35, 'B']]) {
         const base = new THREE.Mesh(btnBase, abMat);
         base.rotation.x = Math.PI / 2;
@@ -639,22 +638,22 @@ function buildGameBoy(screenTexture) {
         buttons.set(base, abActions[letter]);
         buttons.set(cap, abActions[letter]);
 
-        const tag = makePrint(0.3, 0.3, (ctx, w, h) => {
+        const tag = makePrint(1.1, 0.24, (ctx, w, h) => {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = css(COLORS.ink);
-            ctx.font = `${h * 0.72}px "Press Start 2P", monospace`;
-            ctx.fillText(letter, w / 2, h * 0.56);
+            ctx.font = `600 ${h * 0.58}px 'Instrument Sans', sans-serif`;
+            ctx.fillText(abLabels[letter], w / 2, h * 0.55);
         });
         tag.rotation.z = AB_TILT;
-        tag.position.set(x - 0.28, y - 0.52, 0.79);
+        tag.position.set(x - 0.1, y - 0.62, 0.79);
         gb.add(tag);
     }
 
     /* --- SELECT / START pills in grooves, with printed labels --- */
     const pillGeo = new THREE.CapsuleGeometry(0.13, 0.5, 4, 12);
     const grooveGeo = new THREE.CapsuleGeometry(0.2, 0.52, 4, 12);
-    const names = ['SELECT', 'START'];
+    const names = ['PROJECTS', 'ABOUT'];
     const pillActions = [{ type: 'focus', sel: '#projects' }, { type: 'focus', sel: '#about' }];
     [-0.45, 0.45].forEach((dx, i) => {
         const groove = new THREE.Mesh(grooveGeo, recessMat);
@@ -706,6 +705,15 @@ function buildGameBoy(screenTexture) {
     power.position.set(-1.75, 4.74, 0.12);
     gb.add(power);
     buttons.set(power, { type: 'focus', sel: '#cv' });
+    const powerTag = makePrint(0.6, 0.2, (ctx, w, h) => {
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = css(COLORS.ink);
+        ctx.font = `600 ${h * 0.62}px 'Instrument Sans', sans-serif`;
+        ctx.fillText('CV', w / 2, h * 0.55);
+    });
+    powerTag.position.set(-1.75, 4.45, 0.752);
+    gb.add(powerTag);
 
     const jack = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.14, 20), dpadMat);
     jack.position.set(-0.7, -4.74, 0);
@@ -775,7 +783,7 @@ const SHOTS = [
     { sel: '#projects',                      pos: [-1.7, 1.8, 7.4],  tgt: [0, 2.3, 0.5],   page: 'projects', fitW: 4.6 },                     // screen: project menu
     { sel: '#cv',                            pos: [1.3, 2.0, 7.8],   tgt: [0, 2.35, 0.5],  page: 'cv', fitW: 4.6 },                           // screen: quest log
     { sel: '#contact',                       pos: [-1.0, 2.8, 7.2],  tgt: [0, 2.35, 0.5],  page: 'contact', fitW: 4.6 },                      // screen: say hi
-    { sel: '.footer',                        pos: [0, 1.5, 20],      tgt: [0, 0, 0],       orbit: 0.2, page: 'footer', fitW: 7, lift: 1 },    // pull all the way back
+    { sel: '.footer',                        pos: [0.6, 2.7, 4.8],   tgt: [0, 2.3, 0.4],   orbit: 0.06, page: 'footer', fitW: 4.6 },          // zoom in tight on the Game Boy
 ];
 
 const INTRO_POS = new THREE.Vector3(0, 2.35, 2.4); // right in front of the screen
@@ -869,7 +877,7 @@ function init() {
     const ndc = new THREE.Vector2();
 
     // real page UI always wins over the 3D layer behind it
-    const UI_SELECTOR = 'a, button, input, textarea, .gb-hud, .nav, #title-screen, .manifesto, .footer-cta, .footer-inner';
+    const UI_SELECTOR = 'a, button, input, textarea, .gb-hud, .nav, #title-screen, .footer-inner';
 
     function pick(ev) {
         if (document.body.classList.contains('title-locked')) return null;
@@ -929,8 +937,6 @@ function init() {
             }
             const next = shots[THREE.MathUtils.clamp(i + action.dir, 0, shots.length - 1)];
             window.scrollTo({ top: shotAnchor(next) - window.innerHeight / 2, behavior: 'smooth' });
-        } else if (action.type === 'select') {
-            screenCtl.pin(action.index);
         }
     }
 

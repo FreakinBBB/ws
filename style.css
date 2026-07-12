@@ -378,9 +378,8 @@ main { position: relative; z-index: 1; }
 }
 
 /* ============================================================
-   SECTIONS — tall scroll spacers with a small HUD card.
-   The content itself plays on the 3D Game Boy screen
-   (Papers lives on the cartridge on the back).
+   SECTIONS — tall scroll spacers with compact navigation cards.
+   The detailed content lives on the 3D Game Boy (and its cartridge).
    ============================================================ */
 .section {
     min-height: 150vh;
@@ -447,19 +446,6 @@ main { position: relative; z-index: 1; }
     color: var(--ink);
     margin-bottom: 14px;
 }
-.hud-note {
-    font-size: 0.92rem;
-    color: var(--ink-soft);
-    line-height: 1.65;
-    margin-bottom: 16px;
-}
-.hud-screen {
-    font-family: var(--font-pixel);
-    font-size: 0.52rem;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-    animation: press-blink 1.6s step-end infinite;
-}
 .hud-links {
     display: flex;
     flex-direction: column;
@@ -477,30 +463,6 @@ main { position: relative; z-index: 1; }
 .hud-links a:hover { color: var(--blue); }
 .hud-link-muted { font-size: 0.85rem; color: var(--muted); }
 
-/* ============================================================
-   MANIFESTO — quiet full-width statement
-   ============================================================ */
-.manifesto {
-    background: var(--ink);
-    padding: 140px 40px;
-    text-align: center;
-    position: relative;
-    z-index: 2;
-}
-.manifesto-line {
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 5.5vw, 4.2rem);
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 1.25;
-    color: var(--cream);
-}
-.manifesto-line em {
-    font-style: italic;
-    font-weight: 400;
-    color: var(--blue-light);
-}
-
 .pill { white-space: nowrap; }
 
 /* ============================================================
@@ -513,39 +475,13 @@ main { position: relative; z-index: 1; }
     position: relative;
     z-index: 1;
 }
-.footer-cta, .footer-inner {
+.footer-inner {
     background: rgba(15, 15, 15, 0.92);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-radius: 28px;
-}
-.footer-cta { padding: 70px 40px; }
-.footer-inner { padding: 34px 40px; border-top: none; }
-.footer-cta {
-    max-width: 1080px;
-    margin: 0 auto 80px;
-    text-align: center;
-}
-.footer-eyebrow {
-    font-family: var(--font-pixel);
-    font-size: 0.56rem;
-    letter-spacing: 0.16em;
-    color: rgba(244, 239, 234, 0.55);
-    margin-bottom: 26px;
-}
-.footer-title {
-    font-family: var(--font-display);
-    font-size: clamp(3.4rem, 9vw, 6.4rem);
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 1;
-    color: var(--cream);
-    margin-bottom: 38px;
-}
-.footer-title em {
-    font-style: italic;
-    font-weight: 400;
-    color: var(--blue-light);
+    padding: 34px 40px;
+    border-top: none;
 }
 .pill-cream { background: var(--cream); color: var(--ink); }
 .pill-cream:hover { background: var(--blue-light); }
@@ -638,11 +574,9 @@ main { position: relative; z-index: 1; }
     }
     .panel-right .gb-hud, .panel-left .gb-hud { margin-left: auto; margin-right: auto; }
     .gb-hud { padding: 24px 22px; }
-    .hud-note { font-size: 0.85rem; }
     /* keep the sticky papers HUD in the lower half so the cart stays visible */
     .gb-hud-sticky { top: 48vh; margin-bottom: 12vh; }
 
-    .manifesto { padding: 90px 24px; }
 
     .footer-inner { flex-direction: column; text-align: center; }
     .footer-copyright { text-align: center; }
