@@ -54,6 +54,7 @@ function makeScreenController() {
     let tick = 0;
     let hover = null;                        // hotspot under the pointer
     const blink = () => (tick >> 2) & 1;
+    const TOUCH = window.matchMedia('(hover: none)').matches;
 
     /* clickable areas per page, in canvas px (match the draw code below) */
     const HOTSPOTS = {
@@ -335,7 +336,8 @@ function makeScreenController() {
             frame(18, 282, W - 36, 132);
             ctx.textAlign = 'left';
             ctx.fillStyle = INK;
-            const detail = sel >= 0 ? PROJECTS[sel][1] : 'HOVER A PROJECT TO INSPECT';
+            const hint = TOUCH ? 'TAP A PROJECT TO INSPECT' : 'HOVER A PROJECT TO INSPECT';
+            const detail = sel >= 0 ? PROJECTS[sel][1] : hint;
             wrap(detail, 11, W - 104).slice(0, 3).forEach((line, i) => {
                 ctx.fillText(line, 46, 316 + i * 26);
             });
@@ -1040,9 +1042,10 @@ function init() {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    // soft shadows are the most expensive part of the frame — skip them on phones
+    // soft shadows are the most expensive part of the frame — skip them on
+    // phones, and cap the pixel ratio a bit lower there too
     const smallScreen = Math.min(window.innerWidth, window.innerHeight) < 600;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, smallScreen ? 1.75 : 2));
     renderer.shadowMap.enabled = !smallScreen;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -1199,6 +1202,10 @@ function init() {
         const found = pick(ev);
         if (!found) return;
         if (found.mesh) pressButton(found.mesh);
+        // taps never hover: mirror the pointermove highlight so menu
+        // rows (action type 'select') light up on touch as well
+        screenCtl.setHover(found.label ? null : found.hotspot);
+        labelApis.forEach(api => api.setHover(found.label === api ? found.hotspot.index : -1));
         runAction(found.hotspot.action);
     });
 

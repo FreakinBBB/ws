@@ -385,6 +385,7 @@ main { position: relative; z-index: 1; }
    ============================================================ */
 .section {
     min-height: 150vh;
+    min-height: 150svh; /* stable height under mobile browser toolbars */
     padding: 20vh 40px;
     position: relative;
     display: flex;
@@ -397,6 +398,7 @@ main { position: relative; z-index: 1; }
    The invisible anchors are the camera targets for each phase. */
 .section.section-tall {
     min-height: 260vh;
+    min-height: 260svh;
     display: block;
     position: relative;
 }
@@ -410,6 +412,40 @@ main { position: relative; z-index: 1; }
 }
 .pub-anchor-front { top: 50%; }
 .pill { white-space: nowrap; }
+
+/* ============================================================
+   SCROLL RAIL — dash-style section indicator (built by main.js)
+   ============================================================ */
+.scroll-rail {
+    position: fixed;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    opacity: 1;
+    transition: opacity 0.5s ease 0.8s;
+}
+body.title-locked .scroll-rail { opacity: 0; transition: none; }
+.scroll-rail a {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 36px;
+    height: 24px;   /* comfortable touch target around a thin dash */
+}
+.scroll-rail a::before {
+    content: '';
+    width: 14px;
+    height: 3px;
+    border-radius: 1px;
+    background: rgba(15, 15, 15, 0.28);
+    transition: width var(--t-fast), background var(--t-fast);
+}
+.scroll-rail a:hover::before { background: var(--ink-soft); width: 22px; }
+.scroll-rail a.active::before { width: 30px; background: var(--blue); }
 
 /* ============================================================
    FOOTER
@@ -506,8 +542,13 @@ main { position: relative; z-index: 1; }
 
     .section {
         min-height: 130vh;
+        min-height: 130svh;
         padding: 14vh 16px 10vh;
     }
+
+    /* keep the dashes clear of the hero card's rounded corner */
+    .scroll-rail { right: 6px; gap: 2px; }
+    .hero-content { margin-right: 20px; }
 
     .footer-inner { flex-direction: column; text-align: center; }
     .footer-copyright { text-align: center; }

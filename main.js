@@ -7,6 +7,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     initTitleScreen();
     initTypingEffect();
+    initSectionRail();
     initSmoothScroll();
     initNavHighlight();
 });
@@ -66,6 +67,31 @@ function initTypingEffect() {
 }
 
 /* ============================================================
+   SCROLL RAIL — dash-style section indicator on the right edge
+   ============================================================ */
+function initSectionRail() {
+    const stops = [
+        ['#top',          'Start'],
+        ['#about',        'About'],
+        ['#publications', 'Papers'],
+        ['#projects',     'Projects'],
+        ['#cv',           'CV'],
+        ['#contact',      'Contact'],
+    ];
+    const rail = document.createElement('nav');
+    rail.className = 'scroll-rail';
+    rail.setAttribute('aria-label', 'Sections');
+    stops.forEach(([href, label]) => {
+        const a = document.createElement('a');
+        a.href = href;
+        a.title = label;
+        a.setAttribute('aria-label', label);
+        rail.appendChild(a);
+    });
+    document.body.appendChild(rail);
+}
+
+/* ============================================================
    SMOOTH SCROLL
    ============================================================ */
 function initSmoothScroll() {
@@ -87,19 +113,19 @@ function initSmoothScroll() {
    ============================================================ */
 function initNavHighlight() {
     const sections = [...document.querySelectorAll('section[id]')];
-    const links = [...document.querySelectorAll('.nav-links a')];
+    const links = [...document.querySelectorAll('.nav-links a, .scroll-rail a')];
     if (!links.length) return;
 
     function updateActiveLink() {
         const scrollLine = window.scrollY + window.innerHeight * 0.38;
-        let active = sections[0];
+        let activeId = 'top'; // hero, before the first section starts
 
         sections.forEach(section => {
-            if (section.offsetTop <= scrollLine) active = section;
+            if (section.offsetTop <= scrollLine) activeId = section.id;
         });
 
         links.forEach(link => {
-            link.classList.toggle('active', link.getAttribute('href') === `#${active.id}`);
+            link.classList.toggle('active', link.getAttribute('href') === `#${activeId}`);
         });
     }
 
