@@ -111,7 +111,17 @@ body.title-locked { overflow: hidden; }
     color: var(--gb-ink);
     letter-spacing: 0.06em;
     position: relative;
-    animation: boot-drop 1.9s steps(19, end) 0.3s both;
+    animation:
+        boot-drop 1.9s steps(19, end) 0.3s both,
+        gbc-flash 0.7s steps(1, end) 2.25s both; /* GBC boot color flash */
+}
+@keyframes gbc-flash {
+    0%   { color: var(--gb-ink); }
+    18%  { color: #c03028; }
+    36%  { color: #e0a020; }
+    54%  { color: #58b858; }
+    72%  { color: #4098e0; }
+    90%, 100% { color: var(--gb-ink); }
 }
 .boot-tm {
     font-size: 0.45em;
@@ -149,11 +159,11 @@ body.title-locked { overflow: hidden; }
     font-weight: 400;
     letter-spacing: 0.02em;
     line-height: 1;
-    color: var(--blue);
+    color: #e0a020; /* Gold Version wordmark */
     text-shadow:
-        0 -3px 0 var(--blue-light),
-        4px 4px 0 var(--gb-ink),
-        7px 7px 0 rgba(28, 42, 84, 0.28);
+        0 -3px 0 #f8e080,
+        4px 4px 0 #7a4a14,
+        7px 7px 0 rgba(122, 74, 20, 0.3);
     position: relative;
     display: inline-block;
 }
@@ -162,10 +172,23 @@ body.title-locked { overflow: hidden; }
     position: absolute;
     right: -1.3em;
     bottom: 0.35em;
-    text-shadow: 1px 1px 0 var(--gb-ink);
+    text-shadow: 1px 1px 0 #7a4a14;
+}
+.title-version {
+    display: block;
+    width: fit-content;
+    margin: 30px auto 0;
+    font-family: var(--font-pixel);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    color: #f8f4ea;
+    background: #c03028;
+    border-radius: 999px;
+    padding: 11px 24px 10px;
+    box-shadow: 0 3px 0 #701814;
 }
 .title-press-start {
-    margin-top: 84px;
+    margin-top: 46px;
     font-family: var(--font-pixel);
     font-size: 0.78rem;
     color: var(--gb-ink);

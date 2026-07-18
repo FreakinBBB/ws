@@ -14,16 +14,16 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from './vendor/RoundedBoxGeometry.js';
 
 const COLORS = {
-    body:    0xece7e3,
-    recess:  0xd6cfc9,
-    bezel:   0x1d3a6e,
-    dpad:    0x1c1a18,
-    ab:      0x3559a8,
-    pill:    0x837b74,
-    seam:    0xc9c1bb,
+    body:    0x1798a4,   // GBC teal shell
+    recess:  0x0f7078,   // button dishes and grooves, one shade deeper
+    bezel:   0x191b21,   // smoky black screen fascia
+    dpad:    0x24262e,
+    ab:      0x5a4a9e,   // violet A/B, GBC style
+    pill:    0x39404e,
     led:     0xc0392b,
     slot:    0x23283b,
     ink:     0x1c2a54,
+    cart:    0x6b57ab,   // atomic-purple game pak
 };
 
 /* roundRect landed in browsers only in 2022-23 — without it every screen
@@ -61,7 +61,11 @@ function makeScreenController() {
     cv.width = W * SS; cv.height = H * SS;
     const ctx = cv.getContext('2d');
 
-    const BG = '#e6e3dc', INK = '#1c2a54', BLUE = '#3559a8', LIGHT = '#93a9d6', MUTED = '#6e7891';
+    /* GBC-era palette — Pokémon Gold/Crystal + Zelda DX flavored */
+    const CREAM = '#f8f4e8', WHITE = '#fbfbf8', INK = '#20242c', NAVY = '#1c2a54',
+          RED = '#c03028', GOLD = '#e0a020', GOLD_L = '#f8e080',
+          BLUE = '#3868c8', TEAL = '#1898a0', GREEN = '#48a058',
+          PURPLE = '#7858b0', MUTED = '#6e7891';
     const P = (size) => `${size}px "Press Start 2P", monospace`;
 
     let page = 'title';
@@ -74,22 +78,23 @@ function makeScreenController() {
     /* clickable areas per page, in canvas px (match the draw code below) */
     const HOTSPOTS = {
         title: [
-            { x: 130, y: 288, w: 220, h: 48, action: { type: 'scroll', sel: '#about' } },
+            { x: 130, y: 300, w: 220, h: 52, action: { type: 'scroll', sel: '#about' } },
         ],
         projects: [0, 1, 2, 3, 4].map(i => (
-            { x: 26, y: 81 + i * 34, w: 300, h: 34, menu: i, action: { type: 'select', index: i } }
+            { x: 26, y: 77 + i * 38, w: 396, h: 38, menu: i, action: { type: 'select', index: i } }
         )),
         cv: [
-            { x: 130, y: 374, w: 220, h: 44, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com?subject=CV%20request' } },
+            { x: 122, y: 366, w: 236, h: 52, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com?subject=CV%20request' } },
         ],
         contact: [
-            { x: 26, y: 213, w: 210, h: 38, menu: 0, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
-            { x: 26, y: 251, w: 210, h: 38, menu: 1, action: { type: 'link', href: 'https://www.linkedin.com/in/umbertocarugo/' } },
-            { x: 26, y: 289, w: 210, h: 38, menu: 2, action: { type: 'link', href: 'https://github.com/FreakinBBB' } },
+            { x: 26, y: 102, w: 396, h: 52, menu: 0, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
+            { x: 26, y: 154, w: 396, h: 52, menu: 1, action: { type: 'link', href: 'https://www.linkedin.com/in/umbertocarugo/' } },
+            { x: 26, y: 206, w: 396, h: 52, menu: 2, action: { type: 'link', href: 'https://github.com/FreakinBBB' } },
+            { x: 18, y: 286, w: 444, h: 70, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
             { x: 100, y: 376, w: 280, h: 40, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
         ],
         footer: [
-            { x: 170, y: 316, w: 140, h: 48, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
+            { x: 160, y: 306, w: 160, h: 64, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
         ],
     };
 
@@ -98,24 +103,29 @@ function makeScreenController() {
         return hover && hover.menu != null ? hover.menu : -1;
     }
 
-    /* Centered page title in the top band, blinking like PRESS START. */
-    function band(title) {
-        ctx.fillStyle = INK;
+    /* Colored page-title band with a shaded lower lip, GBC style. */
+    function band(title, accent = NAVY) {
+        ctx.fillStyle = accent;
         ctx.fillRect(0, 0, W, 56);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+        ctx.fillRect(0, 50, W, 6);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = CREAM;
+        ctx.font = P(15);
+        ctx.fillText(title, W / 2, 28);
         if (blink()) {
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = BG;
-            ctx.font = P(16);
-            ctx.fillText(title, W / 2, 32);
+            ctx.fillStyle = GOLD;
+            ctx.fillRect(20, 22, 10, 10);
+            ctx.fillRect(W - 30, 22, 10, 10);
         }
     }
 
     /* Faint Pokémon-Center floor tiles: diamond lattice with small
-       hollow squares, drawn behind every page. */
-    function floorTiles() {
+       hollow squares, tinted per page. */
+    function tiles(color) {
         const t = 48;
-        ctx.strokeStyle = 'rgba(147, 169, 214, 0.22)';
+        ctx.strokeStyle = color;
         ctx.lineWidth = 2;
         for (let y = 0; y < H; y += t) {
             for (let x = 0; x < W; x += t) {
@@ -131,7 +141,123 @@ function makeScreenController() {
         }
     }
 
-    /* Gen-1 style NPC sprite: the doctor, white coat over a blue shirt.
+    /* GBC-era dialog window: white panel, dark outline, colored trim. */
+    function gbcWindow(x, y, w, h, accent, fill = WHITE) {
+        ctx.fillStyle = fill;
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, 10);
+        ctx.fill();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.roundRect(x + 2, y + 2, w - 4, h - 4, 8);
+        ctx.stroke();
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(x + 7, y + 7, w - 14, h - 14, 5);
+        ctx.stroke();
+    }
+
+    /* Four-point twinkle, like the shine on Gold/Crystal intros. */
+    function sparkle(x, y, s, on, color = GOLD_L) {
+        if (!on) return;
+        ctx.fillStyle = color;
+        ctx.fillRect(x - s, y - s / 3, s * 2, (s * 2) / 3);
+        ctx.fillRect(x - s / 3, y - s, (s * 2) / 3, s * 2);
+    }
+
+    /* Zelda-style heart, full or empty. */
+    function heart(x, y, full) {
+        ctx.fillStyle = full ? RED : 'rgba(143, 160, 208, 0.4)';
+        ctx.beginPath();
+        ctx.arc(x - 5, y - 4, 6, 0, Math.PI * 2);
+        ctx.arc(x + 5, y - 4, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x - 10.5, y - 1);
+        ctx.lineTo(x, y + 12);
+        ctx.lineTo(x + 10.5, y - 1);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    /* Pokégear-style handset icon. */
+    function phoneIcon(x, y, color) {
+        ctx.fillStyle = color;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(-0.6);
+        ctx.beginPath(); ctx.roundRect(-13, -4, 26, 8, 4); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(-17, -9, 10, 15, 4); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(7, -9, 10, 15, 4); ctx.fill();
+        ctx.restore();
+    }
+
+    /* Chunky pixel icons for the project menu, one color each. */
+    const ICONS = {
+        vr(x, y) { // VR headset
+            ctx.fillStyle = '#c04888';
+            ctx.fillRect(x, y + 6, 24, 13);
+            ctx.fillRect(x + 9, y + 19, 6, 3);
+            ctx.fillStyle = WHITE;
+            ctx.fillRect(x + 4, y + 10, 6, 5);
+            ctx.fillRect(x + 14, y + 10, 6, 5);
+        },
+        tab(x, y) { // tablet + stylus
+            ctx.fillStyle = TEAL;
+            ctx.fillRect(x + 2, y, 15, 24);
+            ctx.fillStyle = WHITE;
+            ctx.fillRect(x + 5, y + 3, 9, 15);
+            ctx.fillStyle = GOLD;
+            ctx.fillRect(x + 20, y + 4, 3, 15);
+        },
+        bot(x, y) { // NAO robot head
+            ctx.fillStyle = '#e07830';
+            ctx.fillRect(x + 2, y + 8, 20, 13);
+            ctx.fillRect(x + 10, y + 3, 4, 5);
+            ctx.fillStyle = RED;
+            ctx.fillRect(x + 8, y, 8, 3);
+            ctx.fillStyle = INK;
+            ctx.fillRect(x + 6, y + 12, 4, 4);
+            ctx.fillRect(x + 14, y + 12, 4, 4);
+        },
+        pill(x, y) { // trial capsule
+            ctx.fillStyle = RED;
+            ctx.beginPath(); ctx.roundRect(x, y + 7, 24, 10, 5); ctx.fill();
+            ctx.fillStyle = WHITE;
+            ctx.beginPath(); ctx.roundRect(x + 12, y + 7, 12, 10, 5); ctx.fill();
+        },
+        pin(x, y) { // map pin
+            ctx.fillStyle = GREEN;
+            ctx.beginPath(); ctx.arc(x + 12, y + 9, 8, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x + 5, y + 12); ctx.lineTo(x + 19, y + 12); ctx.lineTo(x + 12, y + 24);
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = WHITE;
+            ctx.beginPath(); ctx.arc(x + 12, y + 9, 3.5, 0, Math.PI * 2); ctx.fill();
+        },
+    };
+
+    /* Mini render of the real cartridge: atomic-purple pak, gold label. */
+    function cartSprite(x, y, w, h) {
+        ctx.fillStyle = '#6b57ab';
+        ctx.beginPath(); ctx.roundRect(x, y, w, h, 8); ctx.fill();
+        ctx.fillStyle = '#4a3a80';
+        for (let i = 0; i < 3; i++) ctx.fillRect(x + 8, y + 6 + i * 6, w - 16, 3);
+        const g = ctx.createLinearGradient(0, y + 26, 0, y + h - 10);
+        g.addColorStop(0, GOLD_L);
+        g.addColorStop(1, GOLD);
+        ctx.fillStyle = g;
+        ctx.fillRect(x + 10, y + 26, w - 20, h - 36);
+        ctx.fillStyle = RED;
+        ctx.font = P(9);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('PAPERS', x + w / 2, y + 26 + (h - 36) / 2 + 1);
+    }
+
+    /* Gen-2 style NPC sprite: the doctor, white coat over a blue shirt.
        k=ink, f=face, w=coat, b=blue, .=transparent */
     const DOC_SPRITE = [
         '.....kkkkkk.....',
@@ -152,7 +278,7 @@ function makeScreenController() {
         '...kkkk..kkkk...',
     ];
     function sprite(x, y, s) {
-        const pal = { k: INK, f: BG, w: '#f7f4ee', b: BLUE };
+        const pal = { k: '#20242c', f: '#f0c096', w: '#fbfbf8', b: '#2b62b8' };
         DOC_SPRITE.forEach((row, ry) => {
             [...row].forEach((c, rx) => {
                 if (c === '.') return;
@@ -160,20 +286,6 @@ function makeScreenController() {
                 ctx.fillRect(x + rx * s, y + ry * s, s, s);
             });
         });
-    }
-
-    /* Gen-1 dialog frame: white box, thick rounded ink border with the
-       classic one-step light margin outside the line. */
-    function frame(x, y, fw, fh) {
-        ctx.fillStyle = '#f7f4ee';
-        ctx.beginPath();
-        ctx.roundRect(x, y, fw, fh, 12);
-        ctx.fill();
-        ctx.strokeStyle = INK;
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.roundRect(x + 4, y + 4, fw - 8, fh - 8, 9);
-        ctx.stroke();
     }
 
     /* Blinking ▼ "more text" marker, like the dialogue continue arrow. */
@@ -186,27 +298,6 @@ function makeScreenController() {
         ctx.lineTo(x, y + 9);
         ctx.closePath();
         ctx.fill();
-    }
-
-    /* Pokémon-style menu: solid ▶ cursor on the hovered row. */
-    function menu(items, sel, x, y, step, size) {
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.font = P(size);
-        items.forEach((label, i) => {
-            const cy = y + i * step;
-            if (i === sel) {
-                ctx.fillStyle = INK;
-                ctx.beginPath();
-                ctx.moveTo(x, cy - size * 0.55);
-                ctx.lineTo(x, cy + size * 0.55);
-                ctx.lineTo(x + size * 0.8, cy);
-                ctx.closePath();
-                ctx.fill();
-            }
-            ctx.fillStyle = i === sel ? BLUE : INK;
-            ctx.fillText(label, x + size * 1.6, cy);
-        });
     }
 
     function wrap(text, size, maxW) {
@@ -227,142 +318,250 @@ function makeScreenController() {
     }
 
     const PROJECTS = [
-        ['VR NEUROREHAB',   'VR REHAB OF EXECUTIVE FUNCTIONS IN KIDS WITH DCD'],
-        ['DIGITAL REY-O',   'TABLET VS PAPER REY FIGURE VALIDATION STUDY'],
-        ['IOGIOCO',         'NAO ROBOT TEACHING GESTURES TO ASD CHILDREN'],
-        ['PHASE III TRIAL', 'SUB-INVESTIGATOR IN A PHASE III DRUG TRIAL'],
-        ['WHO-NPIA',        'WEB MAP OF MILAN CHILD NPI UNITS'],
+        ['VR NEUROREHAB',   'VR REHAB OF EXECUTIVE FUNCTIONS IN KIDS WITH DCD', 'vr'],
+        ['DIGITAL REY-O',   'TABLET VS PAPER REY FIGURE VALIDATION STUDY',      'tab'],
+        ['IOGIOCO',         'NAO ROBOT TEACHING GESTURES TO ASD CHILDREN',      'bot'],
+        ['PHASE III TRIAL', 'SUB-INVESTIGATOR IN A PHASE III DRUG TRIAL',       'pill'],
+        ['WHO-NPIA',        'WEB MAP OF MILAN CHILD NPI UNITS',                 'pin'],
     ];
 
     const pages = {
-        /* Pokémon Yellow title screen: logo, "Special ... Edition"
-           ribbon, blinking PRESS START, GAME FREAK-style copyright. */
+        /* Pokémon Gold/Crystal-style title: night sky, gold beveled
+           wordmark, red version ribbon, blinking PRESS START. */
         title() {
+            const sky = ctx.createLinearGradient(0, 0, 0, H);
+            sky.addColorStop(0, '#0e1638');
+            sky.addColorStop(0.65, '#23336e');
+            sky.addColorStop(1, '#3a2a58');
+            ctx.fillStyle = sky;
+            ctx.fillRect(0, 0, W, H);
+            [[40, 48], [122, 26], [210, 60], [300, 30], [382, 52], [440, 90],
+             [70, 120], [420, 150], [30, 210], [452, 250]].forEach(([x, y], i) => {
+                sparkle(x, y, 5, ((tick + i) % 5) < 3, i % 2 ? '#cfd8f8' : GOLD_L);
+            });
+
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = INK;
+            ctx.fillStyle = '#cfd8f8';
             ctx.font = P(14);
-            ctx.fillText('DR. UMBERTO', W / 2, 100);
+            ctx.fillText('DR. UMBERTO', W / 2, 96);
 
-            // chunky blue logo with bevel
+            // gold beveled logo
             ctx.font = P(46);
-            ctx.fillStyle = INK;
-            ctx.fillText('CARUGO', W / 2 + 4, 170 + 4);
-            ctx.fillStyle = LIGHT;
-            ctx.fillText('CARUGO', W / 2, 170 - 3);
-            ctx.fillStyle = BLUE;
-            ctx.fillText('CARUGO', W / 2, 170);
+            ctx.fillStyle = '#0a1028';
+            ctx.fillText('CARUGO', W / 2 + 5, 168 + 5);
+            const gold = ctx.createLinearGradient(0, 138, 0, 196);
+            gold.addColorStop(0, GOLD_L);
+            gold.addColorStop(0.55, GOLD);
+            gold.addColorStop(1, '#b06a10');
+            ctx.strokeStyle = '#5a3808';
+            ctx.lineWidth = 6;
+            ctx.lineJoin = 'round';
+            ctx.strokeText('CARUGO', W / 2, 168);
+            ctx.fillStyle = gold;
+            ctx.fillText('CARUGO', W / 2, 168);
+            sparkle(W / 2 - 128, 146, 7, blink());
+            sparkle(W / 2 + 120, 186, 6, !blink());
 
-            // "Special Pikachu Edition" style ribbon
-            const rw = 320, rh = 36, rx = (W - rw) / 2, ry = 212;
-            ctx.fillStyle = LIGHT;
+            // red version ribbon
+            const rw = 330, rh = 38, rx = (W - rw) / 2, ry = 208;
+            ctx.fillStyle = RED;
             ctx.beginPath();
-            ctx.roundRect(rx, ry, rw, rh, 18);
+            ctx.roundRect(rx, ry, rw, rh, 19);
             ctx.fill();
-            ctx.strokeStyle = INK;
+            ctx.strokeStyle = '#701814';
             ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.roundRect(rx + 3, ry + 3, rw - 6, rh - 6, 15);
+            ctx.roundRect(rx + 2, ry + 2, rw - 4, rh - 4, 17);
             ctx.stroke();
-            ctx.fillStyle = INK;
+            ctx.fillStyle = WHITE;
             ctx.font = P(11);
-            ctx.fillText('SPECIAL MEDIC EDITION', W / 2, ry + rh / 2 + 1);
+            ctx.fillText('SPECIAL MEDIC VERSION', W / 2, ry + rh / 2 + 1);
 
-            // the doctor NPC, waiting between the ribbon and PRESS START
-            sprite(W / 2 - 24, 252, 3);
+            // the doctor NPC, gently bobbing under the ribbon
+            sprite(W / 2 - 24, 252 + (blink() ? 0 : 2), 3);
 
             if (blink()) {
-                ctx.fillStyle = INK;
+                ctx.fillStyle = GOLD_L;
                 ctx.font = P(15);
-                ctx.fillText('PRESS START', W / 2, 312);
+                ctx.fillText('PRESS START', W / 2, 328);
             }
 
-            ctx.fillStyle = INK;
+            ctx.fillStyle = '#8fa0d0';
             ctx.font = P(10);
-            ctx.fillText("©'96.'26 CARUGO inc.", W / 2, 398);
+            ctx.fillText("©'96.'26 CARUGO inc.", W / 2, 400);
         },
 
-        /* Trainer card inside a dialog frame. */
+        /* Gold-style TRAINER CARD: portrait, stats, badge row. */
         about() {
-            band('ABOUT');
-            frame(18, 74, W - 36, 328);
+            ctx.fillStyle = CREAM;
+            ctx.fillRect(0, 0, W, H);
+            tiles('rgba(224, 160, 32, 0.14)');
+            band('TRAINER CARD', RED);
+            gbcWindow(18, 70, W - 36, 332, GOLD);
+
+            // portrait box
+            ctx.fillStyle = WHITE;
+            ctx.fillRect(40, 96, 128, 128);
+            ctx.strokeStyle = NAVY;
+            ctx.lineWidth = 4;
+            ctx.strokeRect(42, 98, 124, 124);
+            sprite(48, 106, 7);
+
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = INK;
-            ctx.font = P(13);
-            ctx.fillText('CARUGO', 44, 112);
-            ctx.textAlign = 'right';
-            ctx.fillStyle = MUTED;
+            ctx.font = P(14);
+            ctx.fillText('CARUGO', 196, 118);
+            ctx.fillStyle = RED;
             ctx.font = P(10);
-            ctx.fillText('MEDIC LV.29', W - 44, 112);
-            ctx.fillStyle = LIGHT;
-            ctx.fillRect(44, 136, W - 88, 4);
+            ctx.fillText('MEDIC · LV.29', 196, 150);
+            ctx.fillStyle = MUTED;
+            ctx.font = P(9);
+            ctx.fillText('MILAN, ITALY', 196, 178);
+            ctx.fillStyle = GOLD;
+            ctx.fillRect(196, 200, W - 244, 4);
+
             const rows = [
-                ['PHYSICIAN',      'CHILD NPI @ MILAN'],
-                ['AI IN MEDICINE', 'XAIM MASTER @ PAVIA'],
-                ['RESEARCH',       'VR, GENETICS, DATA'],
+                [RED,   'PHYSICIAN',      'CHILD NPI @ MILAN'],
+                [BLUE,  'AI IN MEDICINE', 'XAIM MASTER @ PAVIA'],
+                [GREEN, 'RESEARCH',       'VR · GENETICS · DATA'],
             ];
-            rows.forEach(([head, sub], i) => {
-                const y = 176 + i * 68;
+            rows.forEach(([c, head, sub], i) => {
+                const y = 258 + i * 40;
+                ctx.fillStyle = c;
+                ctx.fillRect(44, y - 6, 12, 12);
                 ctx.textAlign = 'left';
-                ctx.fillStyle = BLUE;
-                ctx.font = P(13);
-                ctx.fillText(`*${head}`, 44, y);
                 ctx.fillStyle = INK;
                 ctx.font = P(11);
-                ctx.fillText(sub, 66, y + 26);
+                ctx.fillText(head, 68, y);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = MUTED;
+                ctx.font = P(9);
+                ctx.fillText(sub, W - 48, y);
             });
-            marker(W - 60, 374);
+
+            // gym-badge row
+            [GOLD, RED, TEAL, GREEN, PURPLE].forEach((c, i) => {
+                const x = W / 2 - 120 + i * 60, y = 378;
+                ctx.fillStyle = c;
+                ctx.strokeStyle = INK;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                if (i % 3 === 0) ctx.arc(x, y, 11, 0, Math.PI * 2);
+                else if (i % 3 === 1) {
+                    ctx.moveTo(x, y - 12); ctx.lineTo(x + 12, y);
+                    ctx.lineTo(x, y + 12); ctx.lineTo(x - 12, y);
+                    ctx.closePath();
+                } else {
+                    ctx.moveTo(x, y - 12); ctx.lineTo(x + 11, y + 9); ctx.lineTo(x - 11, y + 9);
+                    ctx.closePath();
+                }
+                ctx.fill();
+                ctx.stroke();
+            });
         },
 
-        /* In-game item message + dialogue box. */
+        /* Item-get scene: the Gold/Crystal paper pak, sparkling. */
         papers() {
-            band('PAPERS');
-            frame(18, 74, W - 36, 196);
-            ctx.textAlign = 'center';
+            ctx.fillStyle = CREAM;
+            ctx.fillRect(0, 0, W, H);
+            tiles('rgba(56, 104, 200, 0.10)');
+            band('PAPERS', NAVY);
+
+            gbcWindow(18, 72, W - 36, 200, GOLD);
+            cartSprite(46, 100, 120, 144);
+            sparkle(52, 104, 7, blink());
+            sparkle(162, 232, 6, !blink());
+            sparkle(160, 106, 5, (tick % 3) < 2);
+
+            ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = INK;
-            ctx.font = P(11);
-            ctx.fillText('CART INSERTED:', W / 2, 120);
-            ctx.fillStyle = BLUE;
-            ctx.font = P(17);
-            ctx.fillText('CARUGO PAPERS', W / 2, 164);
             ctx.fillStyle = MUTED;
             ctx.font = P(10);
-            ctx.fillText('4 ENTRIES / VER.2026', W / 2, 206);
-            marker(W - 52, 236);
+            ctx.fillText('CART INSERTED:', 196, 122);
+            ctx.font = P(16);
+            ctx.strokeStyle = '#5a3808';
+            ctx.lineWidth = 5;
+            ctx.lineJoin = 'round';
+            ctx.strokeText('CARUGO', 196, 158);
+            ctx.strokeText('PAPERS', 196, 190);
+            ctx.fillStyle = GOLD;
+            ctx.fillText('CARUGO', 196, 158);
+            ctx.fillText('PAPERS', 196, 190);
+            ctx.fillStyle = RED;
+            ctx.font = P(9);
+            ctx.fillText('GOLD & CRYSTAL EDITION', 196, 222);
+            ctx.fillStyle = MUTED;
+            ctx.fillText('4 ENTRIES · VER.2026', 196, 246);
 
-            frame(18, 296, W - 36, 118);
-            if (blink()) {
-                ctx.fillStyle = INK;
+            gbcWindow(18, 292, W - 36, 122, RED);
+            [['A', 'ARTICLES'], ['B', 'POSTERS']].forEach(([l, txt], i) => {
+                const y = 326 + i * 42;
+                ctx.fillStyle = '#5a4a9e'; // the console's violet buttons
+                ctx.beginPath();
+                ctx.arc(58, y, 15, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = INK;
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+                ctx.fillStyle = WHITE;
                 ctx.font = P(11);
-                ctx.fillText('SIDE A: ARTICLES', W / 2, 338);
-                ctx.fillText('SIDE B: POSTERS', W / 2, 368);
-            }
+                ctx.textAlign = 'center';
+                ctx.fillText(l, 58, y + 1);
+                ctx.textAlign = 'left';
+                ctx.fillStyle = INK;
+                ctx.fillText(`SIDE ${l}: ${txt}`, 86, y);
+            });
+            marker(W - 52, 390);
         },
 
-        /* Start-menu list + Pokédex-style description box. */
+        /* Pokédex-style menu with pixel icons + description window. */
         projects() {
-            band('PROJECTS');
-            frame(18, 66, W - 36, 190);
-            const sel = menuSel();
-            menu(PROJECTS.map(p => p[0]), sel, 30, 98, 34, 14);
+            ctx.fillStyle = '#eef3fa';
+            ctx.fillRect(0, 0, W, H);
+            band('PROJECTS', BLUE);
+            gbcWindow(18, 66, W - 36, 210, BLUE);
 
-            frame(18, 282, W - 36, 132);
+            const sel = menuSel();
+            const icons = [ICONS.vr, ICONS.tab, ICONS.bot, ICONS.pill, ICONS.pin];
+            PROJECTS.forEach(([name], i) => {
+                const cy = 96 + i * 38;
+                if (i === sel) {
+                    ctx.fillStyle = '#cfe0f8';
+                    ctx.fillRect(28, cy - 17, W - 56, 34);
+                    ctx.fillStyle = RED;
+                    ctx.beginPath();
+                    ctx.moveTo(34, cy - 8); ctx.lineTo(34, cy + 8); ctx.lineTo(46, cy);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                icons[i](56, cy - 12);
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = i === sel ? NAVY : INK;
+                ctx.font = P(13);
+                ctx.fillText(name, 94, cy);
+            });
+
+            gbcWindow(18, 292, W - 36, 122, GOLD);
             ctx.textAlign = 'left';
             ctx.fillStyle = INK;
             const hint = TOUCH ? 'TAP A PROJECT TO INSPECT' : 'HOVER A PROJECT TO INSPECT';
             const detail = sel >= 0 ? PROJECTS[sel][1] : hint;
             wrap(detail, 12, W - 104).slice(0, 3).forEach((line, i) => {
-                ctx.fillText(line, 46, 316 + i * 27);
+                ctx.fillText(line, 46, 324 + i * 27);
             });
-            if (sel >= 0) marker(W - 52, 388);
+            if (sel >= 0) marker(W - 52, 392);
         },
 
-        /* Quest log inside one tall frame, CTA in its own box. */
+        /* Zelda DX file-select: dark screen, gold year chips, hearts. */
         cv() {
-            band('CURRICULUM VITAE');
-            frame(18, 70, W - 36, 272);
+            ctx.fillStyle = '#14204a';
+            ctx.fillRect(0, 0, W, H);
+            tiles('rgba(143, 160, 208, 0.08)');
+            band('CURRICULUM VITAE', RED);
+
             const rows = [
                 ['2025', 'XAIM MASTER, PAVIA'],
                 ['2024', 'CCAIM, CAMBRIDGE'],
@@ -370,84 +569,177 @@ function makeScreenController() {
                 ['2021', 'ERASMUS MC ROTTERDAM'],
                 ['2015', 'MD @ PAVIA'],
             ];
-            ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             rows.forEach(([year, text], i) => {
-                const y = 106 + i * 48;
-                ctx.fillStyle = BLUE;
+                const y = 96 + i * 46;
+                ctx.fillStyle = GOLD;
+                ctx.beginPath();
+                ctx.roundRect(40, y - 14, 74, 28, 6);
+                ctx.fill();
+                ctx.strokeStyle = '#8a5a10';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(41, y - 13, 72, 26, 5);
+                ctx.stroke();
+                ctx.fillStyle = '#20242c';
+                ctx.font = P(11);
+                ctx.textAlign = 'center';
+                ctx.fillText(year, 77, y + 1);
+                ctx.textAlign = 'left';
+                ctx.fillStyle = WHITE;
                 ctx.font = P(12);
-                ctx.fillText(year, 44, y);
-                ctx.fillStyle = INK;
-                ctx.fillText(text, 108, y);
+                ctx.fillText(text, 132, y);
+                ctx.fillStyle = 'rgba(143, 160, 208, 0.35)';
+                ctx.fillRect(40, y + 21, W - 80, 2);
             });
 
-            frame(122, 366, 236, 52);
+            for (let i = 0; i < 5; i++) heart(52 + i * 30, 336, i < 4);
+            ctx.fillStyle = '#8fa0d0';
+            ctx.font = P(9);
+            ctx.textAlign = 'left';
+            ctx.fillText('EXP: 11 YRS', 210, 338);
+
+            ctx.fillStyle = '#1a2a5e';
+            ctx.beginPath();
+            ctx.roundRect(122, 366, 236, 52, 10);
+            ctx.fill();
+            ctx.strokeStyle = GOLD;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.roundRect(125, 369, 230, 46, 8);
+            ctx.stroke();
             if (blink()) {
-                ctx.textAlign = 'center';
-                ctx.fillStyle = INK;
+                ctx.fillStyle = GOLD_L;
                 ctx.font = P(11);
+                ctx.textAlign = 'center';
                 ctx.fillText('FULL CV: JUST ASK', W / 2, 393);
             }
         },
 
-        /* Dialogue box + start-menu style link list. */
+        /* Pokégear phone screen: status bar, contact list, call prompt. */
         contact() {
-            band('CONTACT');
-            frame(18, 70, W - 36, 122);
+            const sea = ctx.createLinearGradient(0, 0, 0, H);
+            sea.addColorStop(0, '#1898a0');
+            sea.addColorStop(1, '#0c5e68');
+            ctx.fillStyle = sea;
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = '#142038';
+            ctx.fillRect(0, 0, W, 44);
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = INK;
-            ctx.font = P(13);
-            ctx.fillText("LET'S BUILD", 44, 104);
-            ctx.fillText('SOMETHING', 44, 131);
-            ctx.fillText('MEANINGFUL.', 44, 158);
-            marker(W - 56, 168);
-
-            frame(18, 206, 226, 128);
-            const sel = menuSel();
-            menu(['EMAIL', 'LINKEDIN', 'GITHUB'], sel, 40, 232, 38, 13);
+            ctx.fillStyle = CREAM;
+            ctx.font = P(11);
+            ctx.fillText('CARUGO GEAR', 20, 24);
+            for (let i = 0; i < 4; i++) {
+                ctx.fillStyle = i < 3 ? '#48d0a8' : 'rgba(248, 244, 232, 0.3)';
+                ctx.fillRect(W - 124 + i * 11, 32 - (8 + i * 5), 7, 8 + i * 5);
+            }
+            ctx.fillStyle = CREAM;
+            ctx.font = P(10);
+            ctx.textAlign = 'right';
+            ctx.fillText(blink() ? '10:29' : '10 29', W - 20, 24);
 
             ctx.textAlign = 'center';
-            ctx.fillStyle = MUTED;
+            ctx.fillStyle = CREAM;
+            ctx.font = P(12);
+            ctx.fillText('PHONE', W / 2, 70);
+
+            gbcWindow(18, 92, W - 36, 180, TEAL);
+            const sel = menuSel();
+            [['EMAIL', RED], ['LINKEDIN', '#2867b2'], ['GITHUB', INK]].forEach(([name, c], i) => {
+                const cy = 128 + i * 52;
+                if (i === sel) {
+                    ctx.fillStyle = '#cdeef0';
+                    ctx.fillRect(28, cy - 22, W - 56, 44);
+                    ctx.fillStyle = RED;
+                    ctx.beginPath();
+                    ctx.moveTo(34, cy - 9); ctx.lineTo(34, cy + 9); ctx.lineTo(47, cy);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                phoneIcon(64, cy, c);
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = i === sel ? NAVY : INK;
+                ctx.font = P(13);
+                ctx.fillText(name, 100, cy);
+            });
+
+            gbcWindow(18, 286, W - 36, 70, GOLD);
+            ctx.textAlign = 'left';
+            ctx.fillStyle = INK;
+            ctx.font = P(12);
+            ctx.fillText('CALL CARUGO?', 46, 322);
+            marker(W - 56, 314);
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = CREAM;
             ctx.font = P(11);
             ctx.fillText('CARUGOUMBERTO@GMAIL.COM', W / 2, 396);
         },
 
-        /* Hall of Fame style sign-off. */
+        /* Hall of Fame: night sky, falling confetti, gold sign-off. */
         footer() {
-            frame(52, 96, W - 104, 140);
+            ctx.fillStyle = '#0e1638';
+            ctx.fillRect(0, 0, W, H);
+            [[36, 60, RED], [120, 40, GOLD], [210, 74, '#48d0a8'], [300, 38, BLUE],
+             [398, 64, PURPLE], [60, 150, GOLD], [420, 140, RED], [90, 330, '#48d0a8'],
+             [380, 350, GOLD], [240, 116, '#cfd8f8'], [150, 390, BLUE], [330, 396, RED]].forEach(([x, y, c], i) => {
+                if (((tick + i) % 4) === 3) return;
+                ctx.fillStyle = c;
+                ctx.fillRect(x, y + ((tick + i) % 4) * 2, 8, 8);
+            });
+
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = INK;
             ctx.font = P(20);
-            ctx.fillText('THANKS FOR', W / 2, 144);
-            ctx.fillText('PLAYING!', W / 2, 186);
-            ctx.fillStyle = MUTED;
-            ctx.font = P(10);
-            ctx.fillText("©'96.'26 CARUGO inc.", W / 2, 264);
+            const gold = ctx.createLinearGradient(0, 120, 0, 204);
+            gold.addColorStop(0, GOLD_L);
+            gold.addColorStop(1, GOLD);
+            ctx.strokeStyle = '#5a3808';
+            ctx.lineWidth = 6;
+            ctx.lineJoin = 'round';
+            ctx.strokeText('THANKS FOR', W / 2, 148);
+            ctx.strokeText('PLAYING!', W / 2, 192);
+            ctx.fillStyle = gold;
+            ctx.fillText('THANKS FOR', W / 2, 148);
+            ctx.fillText('PLAYING!', W / 2, 192);
 
-            frame(160, 306, 160, 64);
+            ctx.fillStyle = '#8fa0d0';
+            ctx.font = P(10);
+            ctx.fillText("©'96.'26 CARUGO inc.", W / 2, 254);
+
+            ctx.fillStyle = '#1a2a5e';
+            ctx.beginPath();
+            ctx.roundRect(160, 306, 160, 64, 12);
+            ctx.fill();
+            ctx.strokeStyle = GOLD;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.roundRect(164, 310, 152, 56, 9);
+            ctx.stroke();
             if (blink()) {
-                ctx.fillStyle = BLUE;
+                ctx.fillStyle = GOLD_L;
                 ctx.font = P(13);
-                ctx.fillText('SAY HI!', W / 2, 338);
+                ctx.fillText('SAY HI!', W / 2, 340);
             }
         },
     };
 
     function draw() {
         ctx.setTransform(SS, 0, 0, SS, 0, 0);
-        ctx.fillStyle = BG;
+        ctx.fillStyle = CREAM;
         ctx.fillRect(0, 0, W, H);
-        floorTiles();
         (pages[page] || pages.title)();
         // underline the hovered link so it reads as clickable
         if (hover && hover.action.type === 'link') {
-            ctx.fillStyle = BLUE;
+            ctx.fillStyle = RED;
             ctx.fillRect(hover.x + 6, hover.y + hover.h - 6, hover.w - 12, 4);
         }
         if (fade > 0) {
-            ctx.fillStyle = `rgba(230, 227, 220, ${fade.toFixed(2)})`;
+            // GBC-style white flash on scene change
+            ctx.fillStyle = `rgba(248, 248, 248, ${fade.toFixed(2)})`;
             ctx.fillRect(0, 0, W, H);
             fade = Math.max(0, fade - 0.34);
         }
@@ -549,81 +841,99 @@ function makePrint(w, h, drawFn, pxPerUnit = 240) {
     return mesh;
 }
 
-const css = (hex) => `#${hex.toString(16).padStart(6, '0')}`;
-
 /* Cartridge label with clickable publication rows, styled after the
-   classic DMG Tetris sticker: silver sticker base, dark starburst art
-   field, big outlined logo, vertical print on the margins. `entries`
-   rows with an href get a ">" affordance, a hover highlight and a
-   raycast hotspot. */
-function makeCartLabel(side, entries) {
+   real Pokémon Gold / Crystal Version GBC stickers: metallic foil art
+   field, big outlined wordmark, sparkles, vertical print on the sticker
+   margins. `style` picks the colorway ('gold' or 'crystal'). Rows with
+   an href get a ">" affordance, a hover highlight and a raycast hotspot. */
+function makeCartLabel(side, entries, style) {
     let hoverIdx = -1;
-    const rowTop = (i) => 0.52 + i * 0.20; // row baseline, as fraction of label height
+    const rowTop = (i) => 0.54 + i * 0.20; // row baseline, as fraction of label height
+    const gold = style === 'gold';
 
     const mesh = makePrint(2.6, 2.1, (ctx, w, h) => {
         const P = (s) => `${s}px "Press Start 2P", monospace`;
 
-        // silver sticker base with margins for the vertical print
+        // sticker base with margins for the vertical print
         ctx.fillStyle = '#d8d2cb';
         ctx.fillRect(0, 0, w, h);
 
-        // dark art field
+        // metallic foil art field
         const fx = w * 0.085, fy = h * 0.045, fw = w * 0.83, fh = h * 0.87;
-        ctx.fillStyle = '#131c3f';
+        const foil = ctx.createLinearGradient(0, fy, 0, fy + fh);
+        if (gold) {
+            foil.addColorStop(0, '#f6dd7a');
+            foil.addColorStop(0.45, '#dca832');
+            foil.addColorStop(1, '#8a5a14');
+        } else {
+            foil.addColorStop(0, '#b8ecf4');
+            foil.addColorStop(0.45, '#3f9ecf');
+            foil.addColorStop(1, '#173f74');
+        }
+        ctx.fillStyle = foil;
         ctx.fillRect(fx, fy, fw, fh);
 
-        // starburst rays falling away from behind the logo
-        const vpx = fx + fw / 2, vpy = fy + fh * 0.34;
-        ctx.fillStyle = 'rgba(147, 169, 214, 0.18)';
-        [[0.00, 0.08], [0.20, 0.30], [0.44, 0.52], [0.66, 0.76], [0.90, 0.98]].forEach(([a, b]) => {
+        // diagonal foil shine bands
+        ctx.fillStyle = gold ? 'rgba(255, 248, 214, 0.30)' : 'rgba(240, 252, 255, 0.20)';
+        [[0.06, 0.16], [0.30, 0.10], [0.58, 0.20], [0.86, 0.09]].forEach(([a, ww]) => {
             ctx.beginPath();
-            ctx.moveTo(vpx, vpy);
-            ctx.lineTo(fx + fw * a, fy + fh);
-            ctx.lineTo(fx + fw * b, fy + fh);
+            ctx.moveTo(fx + fw * a, fy);
+            ctx.lineTo(fx + fw * (a + ww), fy);
+            ctx.lineTo(fx + fw * (a + ww - 0.10), fy + fh);
+            ctx.lineTo(fx + fw * (a - 0.10), fy + fh);
             ctx.closePath();
             ctx.fill();
         });
+        if (!gold) {
+            // crystal prism shards
+            ctx.fillStyle = 'rgba(240, 252, 255, 0.18)';
+            [[0.14, 0.76], [0.50, 0.86], [0.84, 0.72]].forEach(([cxr, cyr]) => {
+                ctx.beginPath();
+                ctx.moveTo(fx + fw * cxr, fy + fh * (cyr - 0.16));
+                ctx.lineTo(fx + fw * (cxr + 0.09), fy + fh * cyr);
+                ctx.lineTo(fx + fw * cxr, fy + fh * (cyr + 0.16));
+                ctx.lineTo(fx + fw * (cxr - 0.09), fy + fh * cyr);
+                ctx.closePath();
+                ctx.fill();
+            });
+        }
 
-        // scattered stars
-        ctx.fillStyle = 'rgba(230, 227, 220, 0.75)';
-        [[0.10, 0.14], [0.86, 0.10], [0.20, 0.42], [0.90, 0.48], [0.06, 0.72],
-         [0.94, 0.80], [0.32, 0.90], [0.72, 0.93], [0.55, 0.44]].forEach(([x, y]) => {
-            ctx.fillRect(fx + fw * x, fy + fh * y, fw * 0.008, fw * 0.008);
+        // four-point sparkles, like the foil catches the light
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        [[0.12, 0.12], [0.88, 0.10], [0.16, 0.44], [0.90, 0.50],
+         [0.08, 0.78], [0.92, 0.84], [0.50, 0.42]].forEach(([x, y]) => {
+            const s = fw * 0.012;
+            ctx.fillRect(fx + fw * x - s / 2, fy + fh * y - s * 1.5, s, s * 3);
+            ctx.fillRect(fx + fw * x - s * 1.5, fy + fh * y - s / 2, s * 3, s);
         });
 
-        // a few falling blocks along the edges
-        const bs = fw * 0.045;
-        [[0.05, 0.56, '#c0704e'], [0.92, 0.60, '#3559a8'], [0.06, 0.88, '#93a9d6'],
-         [0.88, 0.90, '#c0392b'], [0.46, 0.96, '#93a9d6']].forEach(([x, y, c]) => {
-            ctx.fillStyle = c;
-            ctx.fillRect(fx + fw * x, fy + fh * y, bs, bs);
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-            ctx.lineWidth = Math.max(1, fw * 0.004);
-            ctx.strokeRect(fx + fw * x, fy + fh * y, bs, bs);
-        });
-
-        // TETRIS-style logo: small eyebrow + big outlined wordmark
+        // wordmark: eyebrow + big outlined PAPERS + edition line
+        const vpx = fx + fw / 2;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#e6e3dc';
-        ctx.font = P(h * 0.042);
-        ctx.fillText('CARUGO', vpx, fy + fh * 0.10);
+        ctx.fillStyle = gold ? '#5a3808' : '#0e2448';
+        ctx.font = P(h * 0.040);
+        ctx.fillText('CARUGO', vpx, fy + fh * 0.095);
         ctx.font = P(h * 0.105);
-        ctx.lineWidth = h * 0.024;
+        ctx.lineWidth = h * 0.026;
         ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#e6e3dc';
-        ctx.strokeText('PAPERS', vpx, fy + fh * 0.24);
-        ctx.fillStyle = '#c0392b';
-        ctx.fillText('PAPERS', vpx, fy + fh * 0.24);
+        ctx.strokeStyle = gold ? '#fff3c8' : '#eafaff';
+        ctx.strokeText('PAPERS', vpx, fy + fh * 0.235);
+        ctx.fillStyle = gold ? '#a02020' : '#14337a';
+        ctx.fillText('PAPERS', vpx, fy + fh * 0.235);
+        ctx.font = P(h * 0.034);
+        ctx.fillStyle = gold ? '#5a3808' : '#eafaff';
+        ctx.fillText(gold ? 'GOLD EDITION' : 'CRYSTAL EDITION', vpx, fy + fh * 0.355);
 
+        // entry rows
         entries.forEach((e, i) => {
             const y = h * rowTop(i);
             if (i === hoverIdx && e.href) {
-                ctx.fillStyle = 'rgba(147, 169, 214, 0.30)';
-                ctx.fillRect(fx + fw * 0.02, y - h * 0.05, fw * 0.96, h * 0.16);
+                ctx.fillStyle = gold ? 'rgba(255, 248, 214, 0.45)' : 'rgba(240, 252, 255, 0.28)';
+                ctx.fillRect(fx + fw * 0.02, y - h * 0.052, fw * 0.96, h * 0.165);
             }
             ctx.textAlign = 'left';
-            ctx.fillStyle = '#93a9d6';
+            ctx.fillStyle = gold ? '#7c4a10' : '#9fd4ea';
             ctx.font = P(h * 0.040);
             ctx.fillText(e.year, fx + fw * 0.04, y);
             // auto-shrink the title into its centred column
@@ -634,7 +944,7 @@ function makeCartLabel(side, entries) {
                 ctx.font = P(titleSize);
             }
             ctx.textAlign = 'center';
-            ctx.fillStyle = '#e6e3dc';
+            ctx.fillStyle = gold ? '#2a1c04' : '#f2fbff';
             ctx.fillText(e.title, fx + fw * 0.55, y);
             let venueSize = h * 0.032;
             ctx.font = P(venueSize);
@@ -642,11 +952,11 @@ function makeCartLabel(side, entries) {
                 venueSize -= 1;
                 ctx.font = P(venueSize);
             }
-            ctx.fillStyle = '#9aa3b8';
+            ctx.fillStyle = gold ? '#5a4008' : '#bfe0f2';
             ctx.fillText(e.venue, fx + fw * 0.55, y + h * 0.062);
             if (e.href) {
                 ctx.textAlign = 'right';
-                ctx.fillStyle = '#c0704e';
+                ctx.fillStyle = gold ? '#a02020' : '#ffd24a';
                 ctx.font = P(h * 0.048);
                 ctx.fillText('>', fx + fw * 0.97, y);
             }
@@ -654,7 +964,7 @@ function makeCartLabel(side, entries) {
 
         // bottom line inside the art field, like MADE IN JAPAN
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#9aa3b8';
+        ctx.fillStyle = gold ? '#5a3808' : '#cfe8f4';
         ctx.font = P(h * 0.030);
         ctx.fillText(side, vpx, fy + fh - h * 0.045);
 
@@ -704,17 +1014,17 @@ function buildGameBoy(screenTexture) {
     // physical controls → navigation actions (consumed by the raycaster)
     const buttons = new Map();
 
-    const bodyMat   = new THREE.MeshStandardMaterial({ color: COLORS.body, roughness: 0.55, metalness: 0.04 });
-    const recessMat = new THREE.MeshStandardMaterial({ color: COLORS.recess, roughness: 0.6, metalness: 0.02 });
-    const bezelMat  = new THREE.MeshStandardMaterial({ color: COLORS.bezel, roughness: 0.42, metalness: 0.1 });
+    const bodyMat   = new THREE.MeshStandardMaterial({ color: COLORS.body, roughness: 0.38, metalness: 0.05 });
+    const recessMat = new THREE.MeshStandardMaterial({ color: COLORS.recess, roughness: 0.5, metalness: 0.02 });
+    const bezelMat  = new THREE.MeshStandardMaterial({ color: COLORS.bezel, roughness: 0.32, metalness: 0.1 });
     const dpadMat   = new THREE.MeshStandardMaterial({ color: COLORS.dpad, roughness: 0.45 });
     const abMat     = new THREE.MeshStandardMaterial({ color: COLORS.ab, roughness: 0.35 });
     const pillMat   = new THREE.MeshStandardMaterial({ color: COLORS.pill, roughness: 0.5 });
     const slotMat   = new THREE.MeshStandardMaterial({ color: COLORS.slot, roughness: 0.6 });
 
-    /* --- body: extruded plate, big rounded bottom-right corner (DMG) --- */
+    /* --- body: extruded plate, symmetric wide-rounded bottom (GBC) --- */
     const W2 = 2.8, H2 = 4.7;       // half extents → 5.6 × 9.4 like before
-    const rT = 0.42, rBL = 0.42, rBR = 1.7;
+    const rT = 0.5, rBL = 1.25, rBR = 1.25;
     const shape = new THREE.Shape();
     shape.moveTo(-W2, -H2 + rBL);
     shape.lineTo(-W2, H2 - rT);
@@ -740,47 +1050,65 @@ function buildGameBoy(screenTexture) {
     body.castShadow = true;
     gb.add(body);
 
-    /* top seam groove (two-part shell like the real case) */
-    const seam = new THREE.Mesh(
-        new THREE.BoxGeometry(5.62, 0.04, 1.52),
-        new THREE.MeshStandardMaterial({ color: COLORS.seam, roughness: 0.6 })
-    );
-    seam.position.set(0, 4.1, 0);
-    gb.add(seam);
-
-    /* --- screen bezel with printed stripes + text --- */
-    const bezel = new THREE.Mesh(new RoundedBoxGeometry(4.7, 4.2, 0.25, 4, 0.14), bezelMat);
-    bezel.position.set(0, 2.35, 0.72);
+    /* --- GBC screen fascia: big rounded smoky-black panel --- */
+    const bezShape = new THREE.Shape();
+    {
+        const bw = 2.475, bh = 2.075, br = 0.62;
+        bezShape.moveTo(-bw, -bh + br);
+        bezShape.lineTo(-bw, bh - br);
+        bezShape.absarc(-bw + br, bh - br, br, Math.PI, Math.PI / 2, true);
+        bezShape.lineTo(bw - br, bh);
+        bezShape.absarc(bw - br, bh - br, br, Math.PI / 2, 0, true);
+        bezShape.lineTo(bw, -bh + br);
+        bezShape.absarc(bw - br, -bh + br, br, 0, -Math.PI / 2, true);
+        bezShape.lineTo(-bw + br, -bh);
+        bezShape.absarc(-bw + br, -bh + br, br, -Math.PI / 2, -Math.PI, true);
+        bezShape.closePath();
+    }
+    const bezelGeo = weldedSmooth(new THREE.ExtrudeGeometry(bezShape, {
+        depth: 0.12,
+        curveSegments: 20,
+        bevelEnabled: true,
+        bevelThickness: 0.05,
+        bevelSize: 0.05,
+        bevelSegments: 3,
+    }));
+    const bezel = new THREE.Mesh(bezelGeo, bezelMat);
+    bezel.position.set(0, 2.35, 0.66);
     bezel.castShadow = true;
     gb.add(bezel);
 
-    const bezelPrint = makePrint(4.7, 4.2, (ctx, w, h) => {
-        const px = (u) => (u / 4.7) * w;
-        // twin accent stripes across the top, DMG style
-        const s1 = h * 0.048, s2 = h * 0.086, st = h * 0.010;
-        ctx.fillStyle = '#93a9d6';
-        ctx.fillRect(px(0.16), s1, w - px(0.32), st);
-        ctx.fillStyle = '#c0704e';
-        ctx.fillRect(px(0.16), s2, w - px(0.32), st);
-        // clear a gap and print the tagline centred on the stripes
-        ctx.font = `italic 700 ${h * 0.034}px 'Instrument Sans', sans-serif`;
-        ctx.letterSpacing = `${h * 0.004}px`;
-        ctx.textAlign = 'center';
+    /* fascia print: POWER legend + GAME BOY COLOR-style rainbow wordmark */
+    const bezelPrint = makePrint(4.95, 4.15, (ctx, w, h) => {
         ctx.textBaseline = 'middle';
-        const label = 'NEURO MATRIX WITH HUMAN SOUND';
-        const mid = (s1 + s2 + st) / 2;
-        const tw = ctx.measureText(label).width;
-        ctx.clearRect(w / 2 - tw / 2 - px(0.10), h * 0.028, tw + px(0.20), h * 0.088);
-        ctx.fillStyle = '#d9d2ce';
-        ctx.fillText(label, w / 2, mid);
-        // Battery legend: centred under the LED, sized to stay inside the
-        // strip left of the screen (screen glass starts 0.55 units in).
-        ctx.font = `600 ${h * 0.017}px 'Instrument Sans', sans-serif`;
-        ctx.letterSpacing = `${h * 0.002}px`;
-        ctx.fillStyle = '#d9d2ce';
-        ctx.fillText('BATTERY', px(0.37), h * 0.49);
+        // POWER, under the LED on the left margin
+        ctx.textAlign = 'center';
+        ctx.font = `600 ${h * 0.022}px 'Instrument Sans', sans-serif`;
+        ctx.fillStyle = '#9aa0ab';
+        ctx.fillText('POWER', w * 0.068, h * 0.27);
+        // wordmark under the glass: silver CARUGO + rainbow COLOR
+        const size = h * 0.05;
+        ctx.font = `italic 700 ${size}px 'Instrument Sans', sans-serif`;
+        const wordA = 'CARUGO';
+        const letters = [...'COLOR'];
+        const colors = ['#b06ac0', '#4098e0', '#58b858', '#e8c030', '#e05048'];
+        const gap = w * 0.014;
+        const wA = ctx.measureText(wordA).width;
+        const wL = letters.map(l => ctx.measureText(l).width);
+        const total = wA + gap * 1.8 + wL.reduce((a, b) => a + b, 0) + gap * 0.4 * (letters.length - 1);
+        let x = (w - total) / 2;
+        const cy = h * 0.925;
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#c8cdd6';
+        ctx.fillText(wordA, x, cy);
+        x += wA + gap * 1.8;
+        letters.forEach((l, i) => {
+            ctx.fillStyle = colors[i];
+            ctx.fillText(l, x, cy);
+            x += wL[i] + gap * 0.4;
+        });
     }, 320);
-    bezelPrint.position.set(0, 2.35, 0.851);
+    bezelPrint.position.set(0, 2.35, 0.845);
     gb.add(bezelPrint);
 
     const screenMat = new THREE.MeshStandardMaterial({
@@ -789,14 +1117,14 @@ function buildGameBoy(screenTexture) {
         metalness: 0.0,
     });
     const screen = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 3.24), screenMat);
-    screen.position.set(0, 2.35, 0.86);
+    screen.position.set(0, 2.55, 0.86);
     gb.add(screen);
 
     const led = new THREE.Mesh(
         new THREE.SphereGeometry(0.07, 12, 12),
         new THREE.MeshStandardMaterial({ color: COLORS.led, emissive: COLORS.led, emissiveIntensity: 0.9 })
     );
-    led.position.set(-1.98, 2.6, 0.865);
+    led.position.set(-2.14, 3.45, 0.865);
     gb.add(led);
 
     /* --- D-pad in a circular recess --- */
@@ -866,7 +1194,7 @@ function buildGameBoy(screenTexture) {
         const tag = makePrint(1.1, 0.24, (ctx, w, h) => {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = css(COLORS.ink);
+            ctx.fillStyle = '#dff6f8';
             ctx.font = `600 ${h * 0.58}px 'Instrument Sans', sans-serif`;
             ctx.fillText(abLabels[letter], w / 2, h * 0.55);
         });
@@ -898,7 +1226,7 @@ function buildGameBoy(screenTexture) {
         const tag = makePrint(0.95, 0.24, (ctx, w, h) => {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = css(COLORS.ink);
+            ctx.fillStyle = '#dff6f8';
             ctx.font = `600 ${h * 0.62}px 'Instrument Sans', sans-serif`;
             ctx.fillText(names[i], w / 2, h * 0.55);
         });
@@ -907,29 +1235,36 @@ function buildGameBoy(screenTexture) {
         gb.add(tag);
     });
 
-    /* --- diagonal speaker grille, hugging the round corner --- */
-    const slotGeo = new THREE.CapsuleGeometry(0.06, 0.68, 4, 8);
-    for (let i = 0; i < 6; i++) {
-        const slot = new THREE.Mesh(slotGeo, slotMat);
-        slot.rotation.z = -0.55;
-        slot.scale.set(1, 1, 0.3);
-        slot.position.set(0.95 + i * 0.3, -3.85 + i * 0.16, 0.752);
-        gb.add(slot);
+    /* --- speaker: diagonal lattice of round holes (GBC style) --- */
+    const holeGeo = new THREE.CylinderGeometry(0.055, 0.055, 0.06, 12);
+    const holeMat = new THREE.MeshStandardMaterial({ color: 0x0b525c, roughness: 0.7 });
+    for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+            if ((r === 0 && c === 3) || (r === 3 && c === 0)) continue;
+            const hole = new THREE.Mesh(holeGeo, holeMat);
+            hole.rotation.x = Math.PI / 2;
+            hole.position.set(1.30 + c * 0.30 - r * 0.16, -3.28 - c * 0.17 - r * 0.27, 0.752);
+            gb.add(hole);
+        }
     }
 
     /* --- side & top hardware details --- */
-    const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.12, 24);
-    for (const side of [-1, 1]) {           // contrast (left) / volume (right)
-        const wheel = new THREE.Mesh(wheelGeo, dpadMat);
-        wheel.rotation.z = Math.PI / 2;
-        wheel.position.set(side * 2.85, 2.5, 0);
-        gb.add(wheel);
-    }
+    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.12, 24), dpadMat);
+    wheel.rotation.z = Math.PI / 2;         // volume, right side
+    wheel.position.set(2.85, 2.5, 0);
+    gb.add(wheel);
 
-    const power = new THREE.Mesh(new RoundedBoxGeometry(0.55, 0.16, 0.22, 2, 0.06), dpadMat);
-    power.position.set(-1.75, 4.74, 0.12);
+    const power = new THREE.Mesh(new RoundedBoxGeometry(0.2, 0.6, 0.26, 2, 0.07), dpadMat);
+    power.position.set(-2.86, 3.2, 0.08);   // ON/OFF slider, left edge
     gb.add(power);
     buttons.set(power, { type: 'focus', sel: '#cv' });
+
+    const ir = new THREE.Mesh(
+        new RoundedBoxGeometry(0.6, 0.14, 0.26, 2, 0.05),
+        new THREE.MeshStandardMaterial({ color: 0x3a1420, roughness: 0.3 })
+    );
+    ir.position.set(0, 4.73, 0.15);         // infrared window, top center
+    gb.add(ir);
 
     const jack = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.14, 20), dpadMat);
     jack.position.set(-0.7, -4.74, 0);
@@ -943,8 +1278,8 @@ function buildGameBoy(screenTexture) {
 
     const cartridge = new THREE.Group();
 
-    // grey shell like the classic DMG Game Pak
-    const cartMat = new THREE.MeshStandardMaterial({ color: COLORS.recess, roughness: 0.55, metalness: 0.03 });
+    // atomic-purple shell like the iconic GBC game paks
+    const cartMat = new THREE.MeshStandardMaterial({ color: COLORS.cart, roughness: 0.35, metalness: 0.05 });
     const cart = new THREE.Mesh(new RoundedBoxGeometry(3.4, 3.6, 0.5, 3, 0.1), cartMat);
     cart.position.set(0, 2.0, -0.85);
     cart.castShadow = true;
@@ -966,9 +1301,9 @@ function buildGameBoy(screenTexture) {
         const brand = makePrint(2.7, 0.3, (ctx, w, h) => {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#8f867d';
+            ctx.fillStyle = '#4a3a80';
             ctx.font = `italic 700 ${h * 0.5}px 'Instrument Sans', sans-serif`;
-            ctx.fillText('Carugo GAME BOY™', w / 2, h * 0.55);
+            ctx.fillText('Carugo GAME BOY COLOR™', w / 2, h * 0.55);
         });
         brand.position.set(0, 3.02, z);
         if (flip) brand.rotation.y = Math.PI;
@@ -978,7 +1313,7 @@ function buildGameBoy(screenTexture) {
     // moulded arrow below the label, pointing at the slot
     for (const [z, flip] of [[-0.593, false], [-1.107, true]]) {
         const arrow = makePrint(0.44, 0.32, (ctx, w, h) => {
-            ctx.strokeStyle = '#a49b92';
+            ctx.strokeStyle = '#54418f';
             ctx.lineWidth = h * 0.1;
             ctx.lineJoin = 'round';
             ctx.beginPath();
@@ -993,24 +1328,25 @@ function buildGameBoy(screenTexture) {
         cartridge.add(arrow);
     }
 
-    // side A (faces away from the console): the journal articles
+    // side A (faces away from the console): the journal articles, gold foil
     const backLabel = makeCartLabel('SIDE A - ARTICLES', [
         { year: '2026', title: 'AICARDI DELPHI',  venue: 'EUR J PAED NEUROL',
           href: 'https://doi.org/10.1016/j.ejpn.2025.11.004' },
         { year: '2025', title: 'COL4A1 / A2', venue: 'CLINICAL GUIDE · IN REVIEW',
           href: null },
-    ]);
+    ], 'gold');
     backLabel.mesh.rotation.y = Math.PI;
     backLabel.mesh.position.set(0, 1.7, -1.105);
     cartridge.add(backLabel.mesh);
 
-    // side B (faces the console, revealed when the cart ejects): the posters
+    // side B (faces the console, revealed when the cart ejects): the
+    // posters, crystal foil
     const frontLabel = makeCartLabel('SIDE B - POSTERS', [
         { year: '2024', title: 'VR REHAB IN DCD', venue: 'FIT4MEDROB ROME',
           href: 'Poster Carelab ENG final.pdf' },
         { year: '2024', title: 'IOGIOCO NAO+ASD', venue: 'FIT4MEDROB ROME',
           href: 'Poster NAO ENG.pdf' },
-    ]);
+    ], 'crystal');
     frontLabel.mesh.position.set(0, 1.7, -0.595);
     cartridge.add(frontLabel.mesh);
 
