@@ -533,8 +533,9 @@ body.title-locked .scroll-rail { opacity: 0; transition: none; }
         padding: 26px 22px;
         box-shadow: 0 24px 60px rgba(15, 15, 15, 0.12);
     }
+    .hero-eyebrow { font-size: 0.62rem; margin-bottom: 24px; }
     .hero-title { font-size: clamp(2.4rem, 10.5vw, 3.2rem); margin-bottom: 20px; }
-    .hero-sub { font-size: 1.02rem; margin-bottom: 18px; }
+    .hero-sub { font-size: 1.05rem; margin-bottom: 18px; }
     .hero-typing-wrap { margin-bottom: 28px; }
     .scroll-hint { display: none; }
 

@@ -61,7 +61,7 @@ function makeScreenController() {
     cv.width = W * SS; cv.height = H * SS;
     const ctx = cv.getContext('2d');
 
-    const BG = '#e6e3dc', INK = '#1c2a54', BLUE = '#3559a8', LIGHT = '#93a9d6', MUTED = '#8b93a6';
+    const BG = '#e6e3dc', INK = '#1c2a54', BLUE = '#3559a8', LIGHT = '#93a9d6', MUTED = '#6e7891';
     const P = (size) => `${size}px "Press Start 2P", monospace`;
 
     let page = 'title';
@@ -306,10 +306,10 @@ function makeScreenController() {
                 const y = 176 + i * 68;
                 ctx.textAlign = 'left';
                 ctx.fillStyle = BLUE;
-                ctx.font = P(12);
+                ctx.font = P(13);
                 ctx.fillText(`*${head}`, 44, y);
                 ctx.fillStyle = INK;
-                ctx.font = P(10);
+                ctx.font = P(11);
                 ctx.fillText(sub, 66, y + 26);
             });
             marker(W - 60, 374);
@@ -328,7 +328,7 @@ function makeScreenController() {
             ctx.font = P(17);
             ctx.fillText('CARUGO PAPERS', W / 2, 164);
             ctx.fillStyle = MUTED;
-            ctx.font = P(9);
+            ctx.font = P(10);
             ctx.fillText('4 ENTRIES / VER.2026', W / 2, 206);
             marker(W - 52, 236);
 
@@ -353,8 +353,8 @@ function makeScreenController() {
             ctx.fillStyle = INK;
             const hint = TOUCH ? 'TAP A PROJECT TO INSPECT' : 'HOVER A PROJECT TO INSPECT';
             const detail = sel >= 0 ? PROJECTS[sel][1] : hint;
-            wrap(detail, 11, W - 104).slice(0, 3).forEach((line, i) => {
-                ctx.fillText(line, 46, 316 + i * 26);
+            wrap(detail, 12, W - 104).slice(0, 3).forEach((line, i) => {
+                ctx.fillText(line, 46, 316 + i * 27);
             });
             if (sel >= 0) marker(W - 52, 388);
         },
@@ -375,7 +375,7 @@ function makeScreenController() {
             rows.forEach(([year, text], i) => {
                 const y = 106 + i * 48;
                 ctx.fillStyle = BLUE;
-                ctx.font = P(11);
+                ctx.font = P(12);
                 ctx.fillText(year, 44, y);
                 ctx.fillStyle = INK;
                 ctx.fillText(text, 108, y);
@@ -385,7 +385,7 @@ function makeScreenController() {
             if (blink()) {
                 ctx.textAlign = 'center';
                 ctx.fillStyle = INK;
-                ctx.font = P(10);
+                ctx.font = P(11);
                 ctx.fillText('FULL CV: JUST ASK', W / 2, 393);
             }
         },
@@ -409,7 +409,7 @@ function makeScreenController() {
 
             ctx.textAlign = 'center';
             ctx.fillStyle = MUTED;
-            ctx.font = P(10);
+            ctx.font = P(11);
             ctx.fillText('CARUGOUMBERTO@GMAIL.COM', W / 2, 396);
         },
 
@@ -624,38 +624,38 @@ function makeCartLabel(side, entries) {
             }
             ctx.textAlign = 'left';
             ctx.fillStyle = '#93a9d6';
-            ctx.font = P(h * 0.036);
+            ctx.font = P(h * 0.040);
             ctx.fillText(e.year, fx + fw * 0.04, y);
             // auto-shrink the title into its centred column
-            let titleSize = h * 0.042;
+            let titleSize = h * 0.048;
             ctx.font = P(titleSize);
-            while (ctx.measureText(e.title).width > fw * 0.58 && titleSize > h * 0.024) {
+            while (ctx.measureText(e.title).width > fw * 0.58 && titleSize > h * 0.026) {
                 titleSize -= 1;
                 ctx.font = P(titleSize);
             }
             ctx.textAlign = 'center';
             ctx.fillStyle = '#e6e3dc';
             ctx.fillText(e.title, fx + fw * 0.55, y);
-            let venueSize = h * 0.028;
+            let venueSize = h * 0.032;
             ctx.font = P(venueSize);
-            while (ctx.measureText(e.venue).width > fw * 0.74 && venueSize > h * 0.017) {
+            while (ctx.measureText(e.venue).width > fw * 0.74 && venueSize > h * 0.019) {
                 venueSize -= 1;
                 ctx.font = P(venueSize);
             }
-            ctx.fillStyle = '#8b93a6';
-            ctx.fillText(e.venue, fx + fw * 0.55, y + h * 0.06);
+            ctx.fillStyle = '#9aa3b8';
+            ctx.fillText(e.venue, fx + fw * 0.55, y + h * 0.062);
             if (e.href) {
                 ctx.textAlign = 'right';
                 ctx.fillStyle = '#c0704e';
-                ctx.font = P(h * 0.042);
+                ctx.font = P(h * 0.048);
                 ctx.fillText('>', fx + fw * 0.97, y);
             }
         });
 
         // bottom line inside the art field, like MADE IN JAPAN
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#8b93a6';
-        ctx.font = P(h * 0.026);
+        ctx.fillStyle = '#9aa3b8';
+        ctx.font = P(h * 0.030);
         ctx.fillText(side, vpx, fy + fh - h * 0.045);
 
         // sticker margins: vertical print, reading bottom-to-top
@@ -1034,13 +1034,13 @@ function buildGameBoy(screenTexture) {
    on narrow (portrait) screens the camera is pushed back until it does */
 const SHOTS = [
     { sel: '.hero',                          pos: [8, 3.5, 15],      tgt: [-2.6, 0.2, 0],  orbit: 0.14, page: 'title', fitW: 7, lift: 1.2 },  // full view, GB on the right
-    { sel: '#about',                         pos: [1.7, 3.0, 7.6],   tgt: [0, 2.35, 0.5],  page: 'about', fitW: 4.6 },                        // screen: trainer card
-    { sel: '#publications .pub-anchor-back', pos: [-1.6, 7.0, -8.4], tgt: [0, 6.6, -0.9],  page: 'papers', rise: 4.7, fitW: 4.4, lift: 2.2 }, // ejected cart, articles side
-    { sel: '#publications .pub-anchor-front',pos: [1.6, 7.2, 6.6],   tgt: [0, 6.6, -0.85], page: 'papers', rise: 4.7, fitW: 4.4, lift: 2.2 }, // ejected cart, posters side
-    { sel: '#projects',                      pos: [-1.7, 1.8, 7.4],  tgt: [0, 2.3, 0.5],   page: 'projects', fitW: 4.6 },                     // screen: project menu
-    { sel: '#cv',                            pos: [1.3, 2.0, 7.8],   tgt: [0, 2.35, 0.5],  page: 'cv', fitW: 4.6 },                           // screen: quest log
-    { sel: '#contact',                       pos: [-1.0, 2.8, 7.2],  tgt: [0, 2.35, 0.5],  page: 'contact', fitW: 4.6 },                      // screen: say hi
-    { sel: '.footer',                        pos: [0.6, 2.7, 4.8],   tgt: [0, 2.3, 0.4],   orbit: 0.06, page: 'footer', fitW: 4.6 },          // zoom in tight on the Game Boy
+    { sel: '#about',                         pos: [1.7, 3.0, 7.6],   tgt: [0, 2.35, 0.5],  page: 'about', fitW: 3.9 },                        // screen: trainer card
+    { sel: '#publications .pub-anchor-back', pos: [-1.6, 7.0, -8.4], tgt: [0, 6.6, -0.9],  page: 'papers', rise: 4.7, fitW: 3.4, lift: 1.0 }, // ejected cart, articles side
+    { sel: '#publications .pub-anchor-front',pos: [1.6, 7.2, 6.6],   tgt: [0, 6.6, -0.85], page: 'papers', rise: 4.7, fitW: 3.4, lift: 1.0 }, // ejected cart, posters side
+    { sel: '#projects',                      pos: [-1.7, 1.8, 7.4],  tgt: [0, 2.3, 0.5],   page: 'projects', fitW: 3.9 },                     // screen: project menu
+    { sel: '#cv',                            pos: [1.3, 2.0, 7.8],   tgt: [0, 2.35, 0.5],  page: 'cv', fitW: 3.9 },                           // screen: quest log
+    { sel: '#contact',                       pos: [-1.0, 2.8, 7.2],  tgt: [0, 2.35, 0.5],  page: 'contact', fitW: 3.9 },                      // screen: say hi
+    { sel: '.footer',                        pos: [0.6, 2.7, 4.8],   tgt: [0, 2.3, 0.4],   orbit: 0.06, page: 'footer', fitW: 3.9 },          // zoom in tight on the Game Boy
 ];
 
 const INTRO_POS = new THREE.Vector3(0, 2.35, 2.4); // right in front of the screen
@@ -1250,8 +1250,9 @@ function init() {
         }
     });
 
-    // narrow screens: squeeze lateral offsets so the GB stays in frame
-    const xScale = () => THREE.MathUtils.clamp(window.innerWidth / 1200, 0.4, 1);
+    // narrow screens: squeeze lateral offsets so the GB stays in frame and
+    // the shots become near-frontal — less perspective skew, easier to read
+    const xScale = () => THREE.MathUtils.clamp(window.innerWidth / 1200, 0.3, 1);
 
     const desiredPos = new THREE.Vector3();
     const desiredTgt = new THREE.Vector3();
