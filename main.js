@@ -10,7 +10,19 @@ document.addEventListener('DOMContentLoaded', () => {
     initSectionRail();
     initSmoothScroll();
     initNavHighlight();
+    initScrollHint();
 });
+
+/* Fade the "SCROLL TO PLAY" pill out once the user actually scrolls. */
+function initScrollHint() {
+    function onScroll() {
+        if (window.scrollY > 80) {
+            document.body.classList.add('has-scrolled');
+            window.removeEventListener('scroll', onScroll);
+        }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+}
 
 /* ============================================================
    TITLE SCREEN — Pokémon Blue

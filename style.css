@@ -342,14 +342,40 @@ main { position: relative; z-index: 1; }
 
 .scroll-hint {
     position: absolute;
-    bottom: 30px;
+    bottom: 26px;
     left: 50%;
     transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
     font-family: var(--font-pixel);
-    font-size: 0.55rem;
-    letter-spacing: 0.16em;
-    color: var(--muted);
-    animation: press-blink 1.6s step-end infinite;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+    background: rgba(244, 239, 234, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 13px 24px;
+    box-shadow: 0 10px 30px rgba(15, 15, 15, 0.14);
+    white-space: nowrap;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.scroll-hint .chev {
+    display: inline-block;
+    color: var(--blue);
+    animation: chev-bounce 1.2s ease-in-out infinite;
+}
+@keyframes chev-bounce {
+    0%, 100% { transform: translateY(-2px); }
+    50%      { transform: translateY(4px); }
+}
+/* the hint has done its job once the user scrolls */
+body.has-scrolled .scroll-hint {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+    pointer-events: none;
 }
 
 .hero-eyebrow {
@@ -560,7 +586,7 @@ body.title-locked .scroll-rail { opacity: 0; transition: none; }
     .hero-title { font-size: clamp(2.4rem, 10.5vw, 3.2rem); margin-bottom: 20px; }
     .hero-sub { font-size: 1.05rem; margin-bottom: 18px; }
     .hero-typing-wrap { margin-bottom: 28px; }
-    .scroll-hint { display: none; }
+    .scroll-hint { bottom: 16px; font-size: 0.55rem; padding: 11px 18px; gap: 10px; }
 
     .section {
         min-height: 130vh;
