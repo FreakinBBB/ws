@@ -49,6 +49,8 @@ body {
     line-height: 1.6;
     overflow-x: hidden;
     min-height: 100vh;
+    touch-action: manipulation;              /* snappier taps on mobile */
+    -webkit-tap-highlight-color: transparent;
 }
 body.title-locked { overflow: hidden; }
 
@@ -463,13 +465,9 @@ body.title-locked .scroll-rail { opacity: 0; transition: none; }
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-radius: 28px;
-    padding: 34px 40px;
+    padding: 40px 40px 34px;
     border: 1px solid rgba(29, 58, 110, 0.18);
     box-shadow: 0 24px 70px rgba(29, 58, 110, 0.16);
-}
-.pill-cream { background: var(--cream); color: var(--ink); }
-.pill-cream:hover { background: var(--blue-light); }
-.footer-inner {
     max-width: 1080px;
     margin: 0 auto;
     display: flex;
@@ -477,9 +475,9 @@ body.title-locked .scroll-rail { opacity: 0; transition: none; }
     align-items: center;
     gap: 24px;
     flex-wrap: wrap;
-    padding-top: 40px;
-    border-top: 1px solid rgba(29, 58, 110, 0.12);
 }
+.pill-cream { background: var(--cream); color: var(--ink); }
+.pill-cream:hover { background: var(--blue-light); }
 .footer-brand {
     font-family: var(--font-pixel);
     font-size: 0.72rem;
