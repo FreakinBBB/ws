@@ -26,6 +26,21 @@ const COLORS = {
     ink:     0x1c2a54,
 };
 
+/* roundRect landed in browsers only in 2022-23 — without it every screen
+   draw call would throw and the display would stay blank */
+if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+        r = Math.min(typeof r === 'number' ? r : 0, w / 2, h / 2);
+        this.moveTo(x + r, y);
+        this.arcTo(x + w, y, x + w, y + h, r);
+        this.arcTo(x + w, y + h, x, y + h, r);
+        this.arcTo(x, y + h, x, y, r);
+        this.arcTo(x, y, x + w, y, r);
+        this.closePath();
+        return this;
+    };
+}
+
 /* redraw queue for canvas-based prints once the web fonts arrive */
 const fontRedraws = [];
 if (document.fonts && document.fonts.ready) {
@@ -446,7 +461,11 @@ function makeScreenController() {
     texture.magFilter = THREE.LinearFilter;
 
     const redraw = () => { draw(); texture.needsUpdate = true; };
-    setInterval(() => { tick++; redraw(); }, 160);
+    setInterval(() => {
+        if (document.hidden) return; // don't repaint/upload in background tabs
+        tick++;
+        redraw();
+    }, 160);
     fontRedraws.push(redraw);
 
     return {
@@ -1044,9 +1063,8 @@ function init() {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     // soft shadows are the most expensive part of the frame — skip them on
     // phones, and cap the pixel ratio a bit lower there too
-    const smallScreen = Math.min(window.innerWidth, window.innerHeight) < 600;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, smallScreen ? 1.75 : 2));
-    renderer.shadowMap.enabled = !smallScreen;
+    const smallScreen = () => Math.min(window.innerWidth, window.innerHeight) < 600;
+    renderer.shadowMap.enabled = !smallScreen();
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const scene = new THREE.Scene();
@@ -1097,6 +1115,7 @@ function init() {
         .filter(s => s.el);
 
     function resize() {
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, smallScreen() ? 1.75 : 2));
         renderer.setSize(window.innerWidth, window.innerHeight, false);
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -1189,6 +1208,7 @@ function init() {
 
     let cursorOn = false;
     window.addEventListener('pointermove', (ev) => {
+        if (ev.pointerType === 'touch') return; // no hover on touch — taps handle it
         const found = pick(ev);
         screenCtl.setHover(found && !found.label ? found.hotspot : null);
         labelApis.forEach(api => api.setHover(found && found.label === api ? found.hotspot.index : -1));
@@ -1324,10 +1344,17 @@ function init() {
         }
     }
 
-    const clock = new THREE.Clock();
+    let prevNow = null;
 
-    function loop() {
-        const time = clock.getElapsedTime();
+    function loop(now) {
+        // delta-time based damping so the camera glides at the same speed on
+        // 30 fps phones and 120 Hz displays alike (clamped across tab switches)
+        if (prevNow === null) prevNow = now;
+        const dt = Math.min((now - prevNow) / 1000, 0.05);
+        prevNow = now;
+        const time = now / 1000;
+        const camK  = 1 - Math.exp(-5.3 * dt); // ≈ 0.085/frame at 60 fps
+        const cartK = 1 - Math.exp(-6.3 * dt); // ≈ 0.1/frame at 60 fps
 
         if (!reducedMotion) {
             gameboy.position.y = Math.sin(time * 1.1) * 0.1;
@@ -1336,10 +1363,10 @@ function init() {
         computeScrollShot(time);
 
         // slide the papers cart in/out of its slot
-        cartridge.position.y += (cartRise - cartridge.position.y) * 0.1;
+        cartridge.position.y += (cartRise - cartridge.position.y) * cartK;
 
         if (introStart !== null) {
-            const k = THREE.MathUtils.clamp((performance.now() - introStart) / INTRO_MS, 0, 1);
+            const k = THREE.MathUtils.clamp((now - introStart) / INTRO_MS, 0, 1);
             const e = easeOutCubic(k);
             curPos.lerpVectors(INTRO_POS, desiredPos, e);
             curTgt.lerpVectors(INTRO_TGT, desiredTgt, e);
@@ -1348,8 +1375,8 @@ function init() {
             curPos.copy(INTRO_POS);
             curTgt.copy(INTRO_TGT);
         } else {
-            curPos.lerp(desiredPos, 0.085);
-            curTgt.lerp(desiredTgt, 0.085);
+            curPos.lerp(desiredPos, camK);
+            curTgt.lerp(desiredTgt, camK);
         }
 
         camera.position.copy(curPos);

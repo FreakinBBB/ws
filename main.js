@@ -20,19 +20,35 @@ function initTitleScreen() {
     const screen = document.getElementById('title-screen');
     if (!screen) return;
 
+    // the intro always replays, so always start the page from the top
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
+
     let dismissed = false;
 
     function dismiss() {
         if (dismissed) return;
         dismissed = true;
+        document.removeEventListener('keydown', onKey, true);
         screen.classList.add('fade-out');
         document.body.classList.remove('title-locked');
         document.dispatchEvent(new CustomEvent('gb:start'));
         setTimeout(() => screen.classList.add('hidden'), 1250);
     }
 
+    // "press any key" — but let browser/system shortcuts through, and swallow
+    // the dismissing key so it doesn't also scroll or trigger the 3D controls
+    const PASS_KEYS = ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Escape'];
+    function onKey(e) {
+        if (e.altKey || e.ctrlKey || e.metaKey) return;
+        if (PASS_KEYS.includes(e.key) || /^F\d{1,2}$/.test(e.key)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        dismiss();
+    }
+
     screen.addEventListener('click', dismiss, { once: true });
-    document.addEventListener('keydown', dismiss, { once: true });
+    document.addEventListener('keydown', onKey, true);
 }
 
 /* ============================================================
@@ -95,15 +111,22 @@ function initSectionRail() {
    SMOOTH SCROLL
    ============================================================ */
 function initSmoothScroll() {
+    // land every link on the exact spot where the 3D camera shot settles:
+    // the vertical center of the target section (papers → its first anchor)
+    function anchorTop(href) {
+        if (href === '#top') return 0;
+        const sel = href === '#publications' ? '#publications .pub-anchor-back' : href;
+        const target = document.querySelector(sel);
+        if (!target) return null;
+        const r = target.getBoundingClientRect();
+        return Math.max(0, r.top + window.scrollY + r.height / 2 - window.innerHeight / 2);
+    }
     document.querySelectorAll('a[href^="#"]').forEach(a => {
         a.addEventListener('click', e => {
-            const target = document.querySelector(a.getAttribute('href'));
-            if (!target) return;
+            const top = anchorTop(a.getAttribute('href'));
+            if (top === null) return;
             e.preventDefault();
-            window.scrollTo({
-                top: target.getBoundingClientRect().top + window.pageYOffset - 90,
-                behavior: 'smooth',
-            });
+            window.scrollTo({ top, behavior: 'smooth' });
         });
     });
 }
