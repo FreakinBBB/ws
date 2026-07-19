@@ -1087,24 +1087,23 @@ function buildGameBoy(screenTexture) {
     const pillMat   = new THREE.MeshStandardMaterial({ color: COLORS.pill, roughness: 0.5 });
     const slotMat   = new THREE.MeshStandardMaterial({ color: COLORS.slot, roughness: 0.6 });
 
-    /* --- body: extruded plate, symmetric wide-rounded bottom (GBC) --- */
+    /* --- body: straight sides, small-rounded top corners and the
+       GBC's signature bottom — one broad continuous elliptical curve --- */
     const W2 = 2.8, H2 = 4.7;       // half extents → 5.6 × 9.4 like before
-    const rT = 0.55, rBL = 1.35, rBR = 1.35;
+    const rT = 0.55, eB = 1.35;     // top corner radius, bottom curve depth
     const shape = new THREE.Shape();
-    shape.moveTo(-W2, -H2 + rBL);
+    shape.moveTo(-W2, -H2 + eB);
     shape.lineTo(-W2, H2 - rT);
     shape.absarc(-W2 + rT, H2 - rT, rT, Math.PI, Math.PI / 2, true);
     shape.lineTo(W2 - rT, H2);
     shape.absarc(W2 - rT, H2 - rT, rT, Math.PI / 2, 0, true);
-    shape.lineTo(W2, -H2 + rBR);
-    shape.absarc(W2 - rBR, -H2 + rBR, rBR, 0, -Math.PI / 2, true);
-    shape.lineTo(-W2 + rBL, -H2);
-    shape.absarc(-W2 + rBL, -H2 + rBL, rBL, -Math.PI / 2, -Math.PI, true);
+    shape.lineTo(W2, -H2 + eB);
+    shape.absellipse(0, -H2 + eB, W2, eB, 0, Math.PI, true);
     shape.closePath();
 
     const bodyGeo = weldedSmooth(new THREE.ExtrudeGeometry(shape, {
         depth: 1.3,
-        curveSegments: 24,
+        curveSegments: 32,
         bevelEnabled: true,
         bevelThickness: 0.1,
         bevelSize: 0.09,
@@ -1333,7 +1332,7 @@ function buildGameBoy(screenTexture) {
     gb.add(ir);
 
     const jack = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.14, 20), dpadMat);
-    jack.position.set(-0.7, -4.74, 0);
+    jack.position.set(-0.7, -4.68, 0); // follows the curved bottom edge
     gb.add(jack);
 
     /* --- cartridge in the back slot — the papers ARE the cart --- */
