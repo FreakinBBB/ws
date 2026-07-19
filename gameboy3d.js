@@ -535,7 +535,7 @@ function makeScreenController() {
             ctx.fillText('4 ENTRIES · VER.2026', 196, 246);
 
             gbcWindow(18, 292, W - 36, 122, RED);
-            [['A', 'ARTICLES'], ['B', 'POSTERS']].forEach(([l, txt], i) => {
+            [['A', 'PAPERS · ARTICLES'], ['B', 'POSTERS']].forEach(([l, txt], i) => {
                 const y = 326 + i * 42;
                 ctx.fillStyle = '#5a4a9e'; // the console's violet buttons
                 ctx.beginPath();
@@ -550,7 +550,7 @@ function makeScreenController() {
                 ctx.fillText(l, 58, y + 1);
                 ctx.textAlign = 'left';
                 ctx.fillStyle = INK;
-                ctx.fillText(`SIDE ${l}: ${txt}`, 86, y);
+                ctx.fillText(`${l}: ${txt}`, 86, y);
             });
             marker(W - 52, 390);
         },
@@ -949,12 +949,12 @@ function makePrint(w, h, drawFn, pxPerUnit = 240) {
 }
 
 /* Cartridge label with clickable publication rows. Deliberately clean
-   and flat for readability: slim Game Boy Color banner, calm gold or
-   crystal field, one big outlined wordmark with the side line under
-   it, entries on dark plates. `style` picks the colorway ('gold' or
-   'crystal'). Rows with an href get a ">" affordance, a hover
-   highlight and a raycast hotspot. */
-function makeCartLabel(side, entries, style) {
+   and flat for readability: calm gold or crystal field, one big
+   outlined wordmark (PAPERS on side A, POSTERS on side B), entries on
+   dark plates. `style` picks the colorway ('gold' or 'crystal'). Rows
+   with an href get a ">" affordance, a hover highlight and a raycast
+   hotspot. */
+function makeCartLabel(title, entries, style) {
     let hoverIdx = -1;
     const rowTop = (i) => 0.53 + i * 0.215; // row baseline, as fraction of label height
     const gold = style === 'gold';
@@ -981,25 +981,22 @@ function makeCartLabel(side, entries, style) {
         ctx.fillStyle = field;
         ctx.fillRect(fx, fy, fw, fh);
 
-        // clean title block: eyebrow, flat outlined wordmark, side line
+        // clean title block: eyebrow + flat outlined wordmark
         // (the shell's moulded band already says "Carugo GAME BOY COLOR")
         const vpx = fx + fw / 2;
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
         ctx.fillStyle = gold ? '#5a3808' : '#eaf6fc';
         ctx.font = P(h * 0.034);
-        ctx.fillText('CARUGO', vpx, fy + fh * 0.135);
-        const ly = fy + fh * 0.255;
+        ctx.fillText('CARUGO', vpx, fy + fh * 0.15);
+        const ly = fy + fh * 0.28;
         ctx.font = P(h * 0.105);
         ctx.lineJoin = 'round';
         ctx.lineWidth = h * 0.022;
         ctx.strokeStyle = gold ? '#f8ecc0' : '#0e2448';
-        ctx.strokeText('PAPERS', vpx, ly);
+        ctx.strokeText(title, vpx, ly);
         ctx.fillStyle = gold ? '#1c2a54' : '#fbfbf8';
-        ctx.fillText('PAPERS', vpx, ly);
-        ctx.font = P(h * 0.030);
-        ctx.fillStyle = gold ? '#8a1c14' : '#ffd24a';
-        ctx.fillText(side, vpx, fy + fh * 0.375);
+        ctx.fillText(title, vpx, ly);
 
         // entry rows on dark plates — plain year, big title, venue
         entries.forEach((e, i) => {
@@ -1246,7 +1243,7 @@ function buildGameBoy(screenTexture) {
         A: { type: 'focus', sel: '#publications .pub-anchor-back' },
         B: { type: 'focus', sel: '#publications .pub-anchor-front' },
     };
-    const abLabels = { A: 'ARTICLES', B: 'POSTERS' };
+    const abLabels = { A: 'PAPERS', B: 'POSTERS' };
     for (const [x, y, letter] of [[2.05, -0.85, 'A'], [1.0, -1.35, 'B']]) {
         const base = new THREE.Mesh(btnBase, abMat);
         base.rotation.x = Math.PI / 2;
@@ -1379,7 +1376,7 @@ function buildGameBoy(screenTexture) {
     }
 
     // side A (faces away from the console): the journal articles, gold foil
-    const backLabel = makeCartLabel('SIDE A - ARTICLES', [
+    const backLabel = makeCartLabel('PAPERS', [
         { year: '2026', title: 'AICARDI DELPHI',  venue: 'EUR J PAED NEUROL',
           href: 'https://doi.org/10.1016/j.ejpn.2025.11.004' },
         { year: '2025', title: 'COL4A1 / A2', venue: 'CLINICAL GUIDE · IN REVIEW',
@@ -1391,7 +1388,7 @@ function buildGameBoy(screenTexture) {
 
     // side B (faces the console, revealed when the cart ejects): the
     // posters, crystal foil
-    const frontLabel = makeCartLabel('SIDE B - POSTERS', [
+    const frontLabel = makeCartLabel('POSTERS', [
         { year: '2024', title: 'VR REHAB IN DCD', venue: 'FIT4MEDROB ROME',
           href: 'Poster Carelab ENG final.pdf' },
         { year: '2024', title: 'IOGIOCO NAO+ASD', venue: 'FIT4MEDROB ROME',
