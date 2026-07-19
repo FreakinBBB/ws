@@ -1,6 +1,6 @@
 /**
  * Portfolio — Dr. Carugo
- * Pokémon Blue title screen intro + warm minimal main site
+ * Retro handheld title screen intro + warm minimal main site
  * with bracket micro-interactions and pixel easter eggs.
  */
 
@@ -25,7 +25,7 @@ function initScrollHint() {
 }
 
 /* ============================================================
-   TITLE SCREEN — Pokémon Blue
+   TITLE SCREEN — retro handheld
    Press start → dive into the screen, revealing the 3D Game Boy
    ============================================================ */
 function initTitleScreen() {

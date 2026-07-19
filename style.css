@@ -1,7 +1,7 @@
 /* ============================================================
    Portfolio — Dr. Carugo
    Warm minimal aesthetic (kriss.ai / Studio 28K inspired)
-   × Pokémon Blue title screen
+   × retro handheld title screen
    ============================================================ */
 
 :root {
@@ -17,7 +17,7 @@
     --line:        rgba(15, 15, 15, 0.12);
 
     /* Accents */
-    --blue:        #3559a8;   /* Pokémon Blue logo */
+    --blue:        #3559a8;   /* retro cartridge blue */
     --blue-deep:   #1d3a6e;
     --blue-light:  #93a9d6;
     --terra:       #c0704e;
@@ -57,7 +57,7 @@ body.title-locked { overflow: hidden; }
 ::selection { background: var(--blue); color: var(--cream); }
 
 /* ============================================================
-   TITLE SCREEN — Pokémon Blue Version
+   TITLE SCREEN — retro handheld boot
    ============================================================ */
 #title-screen {
     position: fixed;

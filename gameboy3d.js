@@ -14,11 +14,11 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from './vendor/RoundedBoxGeometry.js';
 
 const COLORS = {
-    body:    0x1798a4,   // GBC teal shell
-    recess:  0x0f7078,   // button dishes and grooves, one shade deeper
+    body:    0xa8c837,   // kiwi-green shell
+    recess:  0x86a326,   // button dishes and grooves, one shade deeper
     bezel:   0x191b21,   // smoky black screen fascia
     dpad:    0x24262e,
-    ab:      0x5a4a9e,   // violet A/B, GBC style
+    ab:      0x5a4a9e,   // violet A/B
     pill:    0x39404e,
     led:     0xc0392b,
     slot:    0x23283b,
@@ -61,7 +61,7 @@ function makeScreenController() {
     cv.width = W * SS; cv.height = H * SS;
     const ctx = cv.getContext('2d');
 
-    /* GBC-era palette — Pokémon Gold/Crystal + Zelda DX flavored */
+    /* GBC-era palette — gold/crystal retro-RPG flavored */
     const CREAM = '#f8f4e8', WHITE = '#fbfbf8', INK = '#20242c', NAVY = '#1c2a54',
           RED = '#c03028', GOLD = '#e0a020', GOLD_L = '#f8e080',
           BLUE = '#3868c8', TEAL = '#1898a0', GREEN = '#48a058',
@@ -120,7 +120,7 @@ function makeScreenController() {
         }
     }
 
-    /* Faint Pokémon-Center floor tiles: diamond lattice with small
+    /* Faint RPG-lobby floor tiles: diamond lattice with small
        hollow squares, tinted per page. */
     function tiles(color) {
         const t = 48;
@@ -313,7 +313,7 @@ function makeScreenController() {
     ];
 
     const pages = {
-        /* Pokémon Gold/Crystal-style title: night sky, gold beveled
+        /* Gold-cartridge-style title: night sky, gold beveled
            wordmark, red version ribbon, blinking PRESS START. */
         title() {
             const sky = ctx.createLinearGradient(0, 0, 0, H);
@@ -379,7 +379,7 @@ function makeScreenController() {
             ctx.fillText("©'96.'26 CARUGO inc.", W / 2, 400);
         },
 
-        /* TRAINER CARD: photo + identity block with level chip and two
+        /* MEDIC CARD: photo + identity block with level chip and two
            playful stat bars, then three clear skill rows. No badges. */
         about() {
             const bgG = ctx.createLinearGradient(0, 0, W, H);
@@ -419,7 +419,7 @@ function makeScreenController() {
             ctx.textBaseline = 'middle';
             ctx.fillStyle = WHITE;
             ctx.font = P(14);
-            ctx.fillText('TRAINER CARD', 44, 51);
+            ctx.fillText('MEDIC CARD', 44, 51);
             ctx.textAlign = 'right';
             ctx.font = P(9);
             ctx.fillText('ID No.29396', W - 44, 51);
@@ -463,7 +463,7 @@ function makeScreenController() {
             ctx.fillStyle = WHITE;
             ctx.fillText('MEDIC LV.29', 221, 169);
 
-            // stat bars, Pokémon status-screen style
+            // stat bars, RPG status-screen style
             [['CURIOSITY', 1.0, GOLD, 202], ['SLEEP', 0.3, RED, 238]].forEach(([label, frac, c, y]) => {
                 ctx.fillStyle = '#8a5a10';
                 ctx.font = P(8);
@@ -982,7 +982,7 @@ function makeCartLabel(title, entries, style) {
         ctx.fillRect(fx, fy, fw, fh);
 
         // clean title block: eyebrow + flat outlined wordmark
-        // (the shell's moulded band already says "Carugo GAME BOY COLOR")
+        // (the shell's moulded band already says "Carugo COLOR")
         const vpx = fx + fw / 2;
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
@@ -1089,7 +1089,7 @@ function buildGameBoy(screenTexture) {
 
     /* --- body: extruded plate, symmetric wide-rounded bottom (GBC) --- */
     const W2 = 2.8, H2 = 4.7;       // half extents → 5.6 × 9.4 like before
-    const rT = 0.5, rBL = 1.25, rBR = 1.25;
+    const rT = 0.55, rBL = 1.35, rBR = 1.35;
     const shape = new THREE.Shape();
     shape.moveTo(-W2, -H2 + rBL);
     shape.lineTo(-W2, H2 - rT);
@@ -1115,19 +1115,20 @@ function buildGameBoy(screenTexture) {
     body.castShadow = true;
     gb.add(body);
 
-    /* --- GBC screen fascia: big rounded smoky-black panel --- */
+    /* --- GBC screen fascia: wide smoky-black lens, small-rounded top
+       corners and big-rounded bottom corners like the real hardware --- */
     const bezShape = new THREE.Shape();
     {
-        const bw = 2.475, bh = 2.075, br = 0.62;
-        bezShape.moveTo(-bw, -bh + br);
-        bezShape.lineTo(-bw, bh - br);
-        bezShape.absarc(-bw + br, bh - br, br, Math.PI, Math.PI / 2, true);
-        bezShape.lineTo(bw - br, bh);
-        bezShape.absarc(bw - br, bh - br, br, Math.PI / 2, 0, true);
-        bezShape.lineTo(bw, -bh + br);
-        bezShape.absarc(bw - br, -bh + br, br, 0, -Math.PI / 2, true);
-        bezShape.lineTo(-bw + br, -bh);
-        bezShape.absarc(-bw + br, -bh + br, br, -Math.PI / 2, -Math.PI, true);
+        const bw = 2.525, bh = 2.075, rt = 0.42, rb = 0.95;
+        bezShape.moveTo(-bw, -bh + rb);
+        bezShape.lineTo(-bw, bh - rt);
+        bezShape.absarc(-bw + rt, bh - rt, rt, Math.PI, Math.PI / 2, true);
+        bezShape.lineTo(bw - rt, bh);
+        bezShape.absarc(bw - rt, bh - rt, rt, Math.PI / 2, 0, true);
+        bezShape.lineTo(bw, -bh + rb);
+        bezShape.absarc(bw - rb, -bh + rb, rb, 0, -Math.PI / 2, true);
+        bezShape.lineTo(-bw + rb, -bh);
+        bezShape.absarc(-bw + rb, -bh + rb, rb, -Math.PI / 2, -Math.PI, true);
         bezShape.closePath();
     }
     const bezelGeo = weldedSmooth(new THREE.ExtrudeGeometry(bezShape, {
@@ -1143,14 +1144,14 @@ function buildGameBoy(screenTexture) {
     bezel.castShadow = true;
     gb.add(bezel);
 
-    /* fascia print: POWER legend + GAME BOY COLOR-style rainbow wordmark */
-    const bezelPrint = makePrint(4.95, 4.15, (ctx, w, h) => {
+    /* fascia print: POWER legend + CARUGO COLOR rainbow wordmark */
+    const bezelPrint = makePrint(5.05, 4.15, (ctx, w, h) => {
         ctx.textBaseline = 'middle';
         // POWER, under the LED on the left margin
         ctx.textAlign = 'center';
         ctx.font = `600 ${h * 0.022}px 'Instrument Sans', sans-serif`;
         ctx.fillStyle = '#9aa0ab';
-        ctx.fillText('POWER', w * 0.068, h * 0.27);
+        ctx.fillText('POWER', w * 0.072, h * 0.27);
         // wordmark under the glass: silver CARUGO + rainbow COLOR
         const size = h * 0.05;
         ctx.font = `italic 700 ${size}px 'Instrument Sans', sans-serif`;
@@ -1189,7 +1190,7 @@ function buildGameBoy(screenTexture) {
         new THREE.SphereGeometry(0.07, 12, 12),
         new THREE.MeshStandardMaterial({ color: COLORS.led, emissive: COLORS.led, emissiveIntensity: 0.9 })
     );
-    led.position.set(-2.14, 3.45, 0.865);
+    led.position.set(-2.16, 3.45, 0.865);
     gb.add(led);
 
     /* --- D-pad in a circular recess --- */
@@ -1216,7 +1217,7 @@ function buildGameBoy(screenTexture) {
     const AB_TILT = -0.46;
     const dishShape = new THREE.Shape();
     {
-        const dw = 1.18, dh = 0.62, dr = 0.6; // stadium-ish rounded rect
+        const dw = 1.05, dh = 0.56, dr = 0.54; // stadium-ish rounded rect
         dishShape.moveTo(-dw, -dh + dr);
         dishShape.lineTo(-dw, dh - dr);
         dishShape.absarc(-dw + dr, dh - dr, dr, Math.PI, Math.PI / 2, true);
@@ -1233,18 +1234,19 @@ function buildGameBoy(screenTexture) {
         recessMat
     );
     abDish.rotation.z = AB_TILT;
-    abDish.position.set(1.52, -1.1, 0.72);
+    abDish.position.set(1.55, -1.0, 0.72);
     gb.add(abDish);
 
-    const btnBase = new THREE.CylinderGeometry(0.42, 0.45, 0.2, 28);
-    const btnCap = new THREE.SphereGeometry(0.42, 28, 14);
+    // smaller, closer-set buttons like the real GBC
+    const btnBase = new THREE.CylinderGeometry(0.37, 0.40, 0.2, 28);
+    const btnCap = new THREE.SphereGeometry(0.37, 28, 14);
     // A opens side A of the cart (articles), B opens side B (posters)
     const abActions = {
         A: { type: 'focus', sel: '#publications .pub-anchor-back' },
         B: { type: 'focus', sel: '#publications .pub-anchor-front' },
     };
     const abLabels = { A: 'PAPERS', B: 'POSTERS' };
-    for (const [x, y, letter] of [[2.05, -0.85, 'A'], [1.0, -1.35, 'B']]) {
+    for (const [x, y, letter] of [[2.02, -0.78, 'A'], [1.08, -1.22, 'B']]) {
         const base = new THREE.Mesh(btnBase, abMat);
         base.rotation.x = Math.PI / 2;
         base.position.set(x, y, 0.84);
@@ -1259,12 +1261,12 @@ function buildGameBoy(screenTexture) {
         const tag = makePrint(1.1, 0.24, (ctx, w, h) => {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#dff6f8';
+            ctx.fillStyle = '#2c3512';
             ctx.font = `600 ${h * 0.58}px 'Instrument Sans', sans-serif`;
             ctx.fillText(abLabels[letter], w / 2, h * 0.55);
         });
         tag.rotation.z = AB_TILT;
-        tag.position.set(x - 0.1, y - 0.62, 0.79);
+        tag.position.set(x - 0.1, y - 0.56, 0.79);
         gb.add(tag);
     }
 
@@ -1273,15 +1275,16 @@ function buildGameBoy(screenTexture) {
     const grooveGeo = new THREE.CapsuleGeometry(0.2, 0.52, 4, 12);
     const names = ['PROJECTS', 'ABOUT'];
     const pillActions = [{ type: 'focus', sel: '#projects' }, { type: 'focus', sel: '#about' }];
-    [-0.45, 0.45].forEach((dx, i) => {
+    [-0.52, 0.52].forEach((dx, i) => {
+        // horizontal pills side by side, like the real GBC
         const groove = new THREE.Mesh(grooveGeo, recessMat);
-        groove.rotation.z = Math.PI / 2 - 0.5;
+        groove.rotation.z = Math.PI / 2;
         groove.scale.set(1, 1, 0.22);
         groove.position.set(dx, -3.0, 0.752);
         gb.add(groove);
 
         const pill = new THREE.Mesh(pillGeo, pillMat);
-        pill.rotation.z = Math.PI / 2 - 0.5;
+        pill.rotation.z = Math.PI / 2;
         pill.position.set(dx, -3.0, 0.78);
         pill.castShadow = true;
         gb.add(pill);
@@ -1291,24 +1294,22 @@ function buildGameBoy(screenTexture) {
         const tag = makePrint(0.95, 0.24, (ctx, w, h) => {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#dff6f8';
+            ctx.fillStyle = '#2c3512';
             ctx.font = `600 ${h * 0.62}px 'Instrument Sans', sans-serif`;
             ctx.fillText(names[i], w / 2, h * 0.55);
         });
-        tag.rotation.z = -0.47;
-        tag.position.set(dx, -3.42, 0.752);
+        tag.position.set(dx, -3.36, 0.752);
         gb.add(tag);
     });
 
-    /* --- speaker: diagonal lattice of round holes (GBC style) --- */
-    const holeGeo = new THREE.CylinderGeometry(0.055, 0.055, 0.06, 12);
-    const holeMat = new THREE.MeshStandardMaterial({ color: 0x0b525c, roughness: 0.7 });
-    for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
-            if ((r === 0 && c === 3) || (r === 3 && c === 0)) continue;
+    /* --- speaker: six round holes on a diagonal, like the real GBC --- */
+    const holeGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.06, 14);
+    const holeMat = new THREE.MeshStandardMaterial({ color: 0x5c7a1e, roughness: 0.7 });
+    for (let c = 0; c < 3; c++) {
+        for (let r = 0; r < 2; r++) {
             const hole = new THREE.Mesh(holeGeo, holeMat);
             hole.rotation.x = Math.PI / 2;
-            hole.position.set(1.30 + c * 0.30 - r * 0.16, -3.28 - c * 0.17 - r * 0.27, 0.752);
+            hole.position.set(1.42 + c * 0.34 - r * 0.18, -3.42 - c * 0.20 - r * 0.32, 0.752);
             gb.add(hole);
         }
     }
@@ -1368,7 +1369,7 @@ function buildGameBoy(screenTexture) {
             ctx.textBaseline = 'middle';
             ctx.fillStyle = '#4a3a80';
             ctx.font = `italic 700 ${h * 0.5}px 'Instrument Sans', sans-serif`;
-            ctx.fillText('Carugo GAME BOY COLOR™', w / 2, h * 0.55);
+            ctx.fillText('Carugo COLOR™', w / 2, h * 0.55);
         });
         brand.position.set(0, 3.02, z);
         if (flip) brand.rotation.y = Math.PI;
