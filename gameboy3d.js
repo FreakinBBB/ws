@@ -87,11 +87,10 @@ function makeScreenController() {
             { x: 122, y: 366, w: 236, h: 52, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com?subject=CV%20request' } },
         ],
         contact: [
-            { x: 26, y: 102, w: 396, h: 52, menu: 0, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
-            { x: 26, y: 154, w: 396, h: 52, menu: 1, action: { type: 'link', href: 'https://www.linkedin.com/in/umbertocarugo/' } },
-            { x: 26, y: 206, w: 396, h: 52, menu: 2, action: { type: 'link', href: 'https://github.com/FreakinBBB' } },
-            { x: 18, y: 286, w: 444, h: 70, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
-            { x: 100, y: 376, w: 280, h: 40, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
+            { x: 18, y: 60,  w: 444, h: 96, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
+            { x: 18, y: 168, w: 444, h: 56, menu: 0, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
+            { x: 18, y: 232, w: 444, h: 56, menu: 1, action: { type: 'link', href: 'https://www.linkedin.com/in/umbertocarugo/' } },
+            { x: 18, y: 296, w: 444, h: 56, menu: 2, action: { type: 'link', href: 'https://github.com/FreakinBBB' } },
         ],
         footer: [
             { x: 160, y: 306, w: 160, h: 64, action: { type: 'link', href: 'mailto:carugoumberto@gmail.com' } },
@@ -180,18 +179,6 @@ function makeScreenController() {
         ctx.lineTo(x + 10.5, y - 1);
         ctx.closePath();
         ctx.fill();
-    }
-
-    /* Pokégear-style handset icon. */
-    function phoneIcon(x, y, color) {
-        ctx.fillStyle = color;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(-0.6);
-        ctx.beginPath(); ctx.roundRect(-13, -4, 26, 8, 4); ctx.fill();
-        ctx.beginPath(); ctx.roundRect(-17, -9, 10, 15, 4); ctx.fill();
-        ctx.beginPath(); ctx.roundRect(7, -9, 10, 15, 4); ctx.fill();
-        ctx.restore();
     }
 
     /* Chunky pixel icons for the project menu, one color each. */
@@ -392,9 +379,8 @@ function makeScreenController() {
             ctx.fillText("©'96.'26 CARUGO inc.", W / 2, 400);
         },
 
-        /* TRAINER CARD, rebuilt as the Gold-era card itself: parchment
-           gradient, red header with ID, dotted-leader fields, framed
-           photo with gold corners, badge case tray. */
+        /* TRAINER CARD: photo + identity block with level chip and two
+           playful stat bars, then three clear skill rows. No badges. */
         about() {
             const bgG = ctx.createLinearGradient(0, 0, W, H);
             bgG.addColorStop(0, '#f8eecb');
@@ -402,15 +388,15 @@ function makeScreenController() {
             ctx.fillStyle = bgG;
             ctx.fillRect(0, 0, W, H);
 
-            // faded medical-cross watermark
-            ctx.strokeStyle = 'rgba(192, 48, 40, 0.10)';
-            ctx.lineWidth = 13;
+            // faded medical-cross watermark, tucked bottom-right
+            ctx.strokeStyle = 'rgba(192, 48, 40, 0.08)';
+            ctx.lineWidth = 12;
             ctx.beginPath();
-            ctx.arc(W - 78, 92, 46, 0, Math.PI * 2);
+            ctx.arc(W - 84, H - 92, 42, 0, Math.PI * 2);
             ctx.stroke();
-            ctx.fillStyle = 'rgba(192, 48, 40, 0.10)';
-            ctx.fillRect(W - 78 - 9, 92 - 27, 18, 54);
-            ctx.fillRect(W - 78 - 27, 92 - 9, 54, 18);
+            ctx.fillStyle = 'rgba(192, 48, 40, 0.08)';
+            ctx.fillRect(W - 84 - 8, H - 92 - 24, 16, 48);
+            ctx.fillRect(W - 84 - 24, H - 92 - 8, 48, 16);
 
             // card frame
             ctx.strokeStyle = '#8a5a10';
@@ -439,85 +425,79 @@ function makeScreenController() {
             ctx.fillText('ID No.29396', W - 44, 51);
             sparkle(W - 150, 40, 5, blink(), GOLD_L);
 
-            // fields with dotted leaders
-            const fields = [
-                ['NAME',     'CARUGO'],
-                ['CLASS',    'MEDIC LV.29'],
-                ['ROLE',     'CHILD NPI'],
-                ['AI',       'XAIM PAVIA'],
-                ['RESEARCH', 'VR·GEN·DATA'],
-                ['COFFEE',   '999+ CUPS'],
-            ];
-            fields.forEach(([k, v], i) => {
-                const y = 110 + i * 38;
-                ctx.textAlign = 'left';
-                ctx.fillStyle = '#8a5a10';
-                ctx.font = P(10);
-                ctx.fillText(k, 44, y);
-                const kw = ctx.measureText(k).width;
-                ctx.font = P(11);
-                const vw = ctx.measureText(v).width;
-                ctx.fillStyle = 'rgba(90, 56, 8, 0.4)';
-                for (let dx = 44 + kw + 12; dx < 292 - vw - 12; dx += 10) {
-                    ctx.fillRect(dx, y + 3, 3, 3);
-                }
-                ctx.textAlign = 'right';
-                ctx.fillStyle = INK;
-                ctx.fillText(v, 292, y);
-            });
-
-            // trainer photo with gold corner tabs
+            // trainer photo, gold corner tabs
             ctx.fillStyle = WHITE;
-            ctx.fillRect(316, 104, 136, 144);
+            ctx.fillRect(40, 96, 144, 160);
+            sprite(48, 112, 8);
             ctx.strokeStyle = NAVY;
             ctx.lineWidth = 4;
-            ctx.strokeRect(318, 106, 132, 140);
-            sprite(328, 114, 7);
-            [[316, 104, 1, 1], [452, 104, -1, 1], [316, 248, 1, -1], [452, 248, -1, -1]].forEach(([x, y, sx, sy]) => {
+            ctx.strokeRect(42, 98, 140, 156);
+            [[40, 96, 1, 1], [184, 96, -1, 1], [40, 256, 1, -1], [184, 256, -1, -1]].forEach(([x, y, sx, sy]) => {
                 ctx.fillStyle = GOLD;
                 ctx.beginPath();
                 ctx.moveTo(x, y);
-                ctx.lineTo(x + 18 * sx, y);
-                ctx.lineTo(x, y + 18 * sy);
+                ctx.lineTo(x + 16 * sx, y);
+                ctx.lineTo(x, y + 16 * sy);
                 ctx.closePath();
                 ctx.fill();
             });
             ctx.textAlign = 'center';
             ctx.fillStyle = '#6e5834';
             ctx.font = P(8);
-            ctx.fillText('MILAN, ITALY', 384, 266);
+            ctx.fillText('MILAN, ITALY', 112, 276);
 
-            // badge case
-            ctx.fillStyle = 'rgba(138, 90, 16, 0.14)';
-            ctx.beginPath();
-            ctx.roundRect(32, 312, W - 64, 88, 10);
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(138, 90, 16, 0.5)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.roundRect(34, 314, W - 68, 84, 9);
-            ctx.stroke();
+            // identity block
             ctx.textAlign = 'left';
             ctx.fillStyle = '#8a5a10';
             ctx.font = P(9);
-            ctx.fillText('BADGES', 52, 334);
-            [GOLD, RED, TEAL, GREEN, PURPLE].forEach((c, i) => {
-                const x = 96 + i * 72, y = 366;
-                ctx.fillStyle = c;
-                ctx.strokeStyle = INK;
-                ctx.lineWidth = 2.5;
+            ctx.fillText('DR. UMBERTO', 208, 106);
+            ctx.fillStyle = INK;
+            ctx.font = P(18);
+            ctx.fillText('CARUGO', 208, 136);
+            ctx.font = P(9);
+            const lvw = ctx.measureText('MEDIC LV.29').width + 26;
+            ctx.fillStyle = RED;
+            ctx.beginPath();
+            ctx.roundRect(208, 154, lvw, 28, 14);
+            ctx.fill();
+            ctx.fillStyle = WHITE;
+            ctx.fillText('MEDIC LV.29', 221, 169);
+
+            // stat bars, Pokémon status-screen style
+            [['CURIOSITY', 1.0, GOLD, 202], ['SLEEP', 0.3, RED, 238]].forEach(([label, frac, c, y]) => {
+                ctx.fillStyle = '#8a5a10';
+                ctx.font = P(8);
+                ctx.fillText(label, 208, y);
+                ctx.fillStyle = 'rgba(90, 56, 8, 0.18)';
                 ctx.beginPath();
-                if (i % 3 === 0) ctx.arc(x, y, 12, 0, Math.PI * 2);
-                else if (i % 3 === 1) {
-                    ctx.moveTo(x, y - 13); ctx.lineTo(x + 13, y);
-                    ctx.lineTo(x, y + 13); ctx.lineTo(x - 13, y);
-                    ctx.closePath();
-                } else {
-                    ctx.moveTo(x, y - 13); ctx.lineTo(x + 12, y + 10); ctx.lineTo(x - 12, y + 10);
-                    ctx.closePath();
-                }
+                ctx.roundRect(208, y + 8, 224, 12, 6);
                 ctx.fill();
-                ctx.stroke();
+                ctx.fillStyle = c;
+                ctx.beginPath();
+                ctx.roundRect(208, y + 8, 224 * frac, 12, 6);
+                ctx.fill();
+            });
+
+            // divider + skill rows, full width
+            ctx.fillStyle = GOLD;
+            ctx.fillRect(44, 296, W - 88, 4);
+            const rows = [
+                [RED,   'MEDICINE', 'CHILD NPI RESIDENT · MILAN'],
+                [BLUE,  'AI',       'XAIM MASTER · PAVIA'],
+                [GREEN, 'RESEARCH', 'VR · GENETICS · DATA'],
+            ];
+            rows.forEach(([c, head, sub], i) => {
+                const y = 322 + i * 32;
+                ctx.fillStyle = c;
+                ctx.fillRect(44, y - 6, 12, 12);
+                ctx.textAlign = 'left';
+                ctx.fillStyle = INK;
+                ctx.font = P(11);
+                ctx.fillText(head, 68, y);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#6e5834';
+                ctx.font = P(9);
+                ctx.fillText(sub, W - 48, y);
             });
         },
 
@@ -675,7 +655,8 @@ function makeScreenController() {
             }
         },
 
-        /* Pokégear phone screen: status bar, contact list, call prompt. */
+        /* CarugoGear phone: status bar, contact card, one big button
+           per channel with its real address, tap hint. */
         contact() {
             const sea = ctx.createLinearGradient(0, 0, 0, H);
             sea.addColorStop(0, '#1898a0');
@@ -683,59 +664,125 @@ function makeScreenController() {
             ctx.fillStyle = sea;
             ctx.fillRect(0, 0, W, H);
 
+            // status bar
             ctx.fillStyle = '#142038';
             ctx.fillRect(0, 0, W, 44);
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = CREAM;
-            ctx.font = P(11);
-            ctx.fillText('CARUGO GEAR', 20, 24);
+            ctx.font = P(10);
+            ctx.fillText('CARUGOGEAR', 20, 24);
             for (let i = 0; i < 4; i++) {
                 ctx.fillStyle = i < 3 ? '#48d0a8' : 'rgba(248, 244, 232, 0.3)';
                 ctx.fillRect(W - 124 + i * 11, 32 - (8 + i * 5), 7, 8 + i * 5);
             }
             ctx.fillStyle = CREAM;
-            ctx.font = P(10);
             ctx.textAlign = 'right';
             ctx.fillText(blink() ? '10:29' : '10 29', W - 20, 24);
 
-            ctx.textAlign = 'center';
-            ctx.fillStyle = CREAM;
-            ctx.font = P(12);
-            ctx.fillText('PHONE', W / 2, 70);
-
-            gbcWindow(18, 92, W - 36, 180, TEAL);
-            const sel = menuSel();
-            [['EMAIL', RED], ['LINKEDIN', '#2867b2'], ['GITHUB', INK]].forEach(([name, c], i) => {
-                const cy = 128 + i * 52;
-                if (i === sel) {
-                    ctx.fillStyle = '#cdeef0';
-                    ctx.fillRect(28, cy - 22, W - 56, 44);
-                    ctx.fillStyle = RED;
-                    ctx.beginPath();
-                    ctx.moveTo(34, cy - 9); ctx.lineTo(34, cy + 9); ctx.lineTo(47, cy);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-                phoneIcon(64, cy, c);
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'middle';
-                ctx.fillStyle = i === sel ? NAVY : INK;
-                ctx.font = P(13);
-                ctx.fillText(name, 100, cy);
-            });
-
-            gbcWindow(18, 286, W - 36, 70, GOLD);
+            // contact card: avatar, name, status
+            gbcWindow(18, 60, W - 36, 96, TEAL);
+            ctx.fillStyle = WHITE;
+            ctx.fillRect(36, 74, 68, 68);
+            sprite(38, 76, 4);
+            ctx.strokeStyle = NAVY;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(38, 76, 64, 64);
             ctx.textAlign = 'left';
             ctx.fillStyle = INK;
-            ctx.font = P(12);
-            ctx.fillText('CALL CARUGO?', 46, 322);
-            marker(W - 56, 314);
+            ctx.font = P(13);
+            ctx.fillText('DR. CARUGO', 122, 96);
+            ctx.fillStyle = '#217a48';
+            ctx.beginPath();
+            ctx.arc(128, 128, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.font = P(9);
+            ctx.fillText('ONLINE · MILAN', 142, 128);
 
-            ctx.textAlign = 'center';
-            ctx.fillStyle = CREAM;
-            ctx.font = P(11);
-            ctx.fillText('CARUGOUMBERTO@GMAIL.COM', W / 2, 396);
+            // one button per channel
+            const rowsC = [
+                ['EMAIL',    'CARUGOUMBERTO@GMAIL.COM', RED],
+                ['LINKEDIN', '/UMBERTOCARUGO',          '#2867b2'],
+                ['GITHUB',   '/FREAKINBBB',             '#24292f'],
+            ];
+            const sel = menuSel();
+            rowsC.forEach(([name, sub, c], i) => {
+                const y0 = 168 + i * 64, cy = y0 + 28;
+                ctx.fillStyle = i === sel ? '#cdeef0' : WHITE;
+                ctx.beginPath();
+                ctx.roundRect(18, y0, W - 36, 56, 12);
+                ctx.fill();
+                ctx.strokeStyle = INK;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.roundRect(20, y0 + 2, W - 40, 52, 10);
+                ctx.stroke();
+                if (i === sel) {
+                    ctx.strokeStyle = TEAL;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.roundRect(25, y0 + 7, W - 50, 42, 6);
+                    ctx.stroke();
+                }
+                if (i === 0) {          // envelope
+                    ctx.fillStyle = RED;
+                    ctx.beginPath();
+                    ctx.roundRect(40, cy - 11, 30, 22, 4);
+                    ctx.fill();
+                    ctx.strokeStyle = WHITE;
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(43, cy - 8);
+                    ctx.lineTo(55, cy + 2);
+                    ctx.lineTo(67, cy - 8);
+                    ctx.stroke();
+                } else if (i === 1) {   // "in" tile
+                    ctx.fillStyle = c;
+                    ctx.beginPath();
+                    ctx.roundRect(42, cy - 13, 26, 26, 6);
+                    ctx.fill();
+                    ctx.fillStyle = WHITE;
+                    ctx.font = `700 16px 'Instrument Sans', sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText('in', 55, cy + 2);
+                } else {                // octocat tile
+                    ctx.fillStyle = c;
+                    ctx.beginPath();
+                    ctx.roundRect(42, cy - 13, 26, 26, 6);
+                    ctx.fill();
+                    ctx.fillStyle = WHITE;
+                    ctx.beginPath();
+                    ctx.arc(55, cy + 2, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(48, cy - 3); ctx.lineTo(48, cy - 10); ctx.lineTo(53, cy - 5);
+                    ctx.moveTo(62, cy - 3); ctx.lineTo(62, cy - 10); ctx.lineTo(57, cy - 5);
+                    ctx.fill();
+                    ctx.fillStyle = c;
+                    ctx.beginPath();
+                    ctx.arc(52, cy + 1, 1.6, 0, Math.PI * 2);
+                    ctx.arc(58, cy + 1, 1.6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.textAlign = 'left';
+                ctx.fillStyle = INK;
+                ctx.font = P(13);
+                ctx.fillText(name, 92, cy - 9);
+                ctx.fillStyle = MUTED;
+                ctx.font = P(8);
+                ctx.fillText(sub, 92, cy + 15);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = c;
+                ctx.font = P(14);
+                ctx.fillText('>', W - 40, cy);
+            });
+
+            if (blink()) {
+                ctx.textAlign = 'center';
+                ctx.fillStyle = CREAM;
+                ctx.font = P(10);
+                ctx.fillText(TOUCH ? 'TAP TO CONNECT' : 'CLICK TO CONNECT', W / 2, 404);
+            }
         },
 
         /* Hall of Fame: night sky, falling confetti, gold sign-off. */
@@ -792,7 +839,8 @@ function makeScreenController() {
         ctx.fillRect(0, 0, W, H);
         (pages[page] || pages.title)();
         // underline the hovered link so it reads as clickable
-        if (hover && hover.action.type === 'link') {
+        // (menu rows already get a highlight bar, no underline needed)
+        if (hover && hover.action.type === 'link' && hover.menu == null) {
             ctx.fillStyle = RED;
             ctx.fillRect(hover.x + 6, hover.y + hover.h - 6, hover.w - 12, 4);
         }
@@ -900,125 +948,38 @@ function makePrint(w, h, drawFn, pxPerUnit = 240) {
     return mesh;
 }
 
-/* Label art: a stylized firebird emblem (Gold, after Ho-Oh on the
-   Pokémon Gold box) with fanned feather wings, body, crest and tail. */
-function firebird(ctx, cx, cy, s) {
-    const feather = (ang, len, wdt, color) => {
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(ang);
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.roundRect(0, -wdt / 2, len, wdt, wdt / 2);
-        ctx.fill();
-        ctx.restore();
-    };
-    const cols = ['#c03028', '#e05038', '#e87830', '#f0a028'];
-    for (const dir of [-1, 1]) {
-        for (let i = 0; i < 4; i++) {
-            const ang = -0.15 - i * 0.30;
-            feather(dir === 1 ? ang : Math.PI - ang, s * (1 - i * 0.16), s * 0.14, cols[i]);
-        }
-    }
-    // tail feathers
-    [-0.35, 0, 0.35].forEach((d, i) => {
-        feather(Math.PI / 2 + d, s * 0.52, s * 0.11, i === 1 ? '#e05038' : '#e87830');
-    });
-    // body, head, crest, beak
-    ctx.fillStyle = '#f0a028';
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, s * 0.16, s * 0.24, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(cx, cy - s * 0.30, s * 0.11, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#f8e080';
-    ctx.beginPath();
-    ctx.moveTo(cx + s * 0.09, cy - s * 0.34);
-    ctx.lineTo(cx + s * 0.22, cy - s * 0.29);
-    ctx.lineTo(cx + s * 0.09, cy - s * 0.25);
-    ctx.closePath();
-    ctx.fill();
-    feather(-Math.PI / 2 - 0.25, s * 0.20, s * 0.07, '#c03028');
-    feather(-Math.PI / 2 + 0.05, s * 0.22, s * 0.07, '#e05038');
-}
-
-/* Label art: a faceted crystal cluster (Crystal Version style). */
-function gems(ctx, cx, cy, s) {
-    const gem = (gx, gy, gw, gh, rot, c1, c2) => {
-        ctx.save();
-        ctx.translate(gx, gy);
-        ctx.rotate(rot);
-        ctx.fillStyle = c1;
-        ctx.beginPath();
-        ctx.moveTo(0, -gh);
-        ctx.lineTo(gw * 0.6, -gh * 0.55);
-        ctx.lineTo(gw * 0.6, gh * 0.6);
-        ctx.lineTo(0, gh);
-        ctx.lineTo(-gw * 0.6, gh * 0.6);
-        ctx.lineTo(-gw * 0.6, -gh * 0.55);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = c2;
-        ctx.beginPath();
-        ctx.moveTo(0, -gh);
-        ctx.lineTo(gw * 0.6, -gh * 0.55);
-        ctx.lineTo(0, gh * 0.15);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-    };
-    gem(cx - s * 0.55, cy + s * 0.12, s * 0.30, s * 0.42, -0.38, '#3f9ecf', '#9fe2f5');
-    gem(cx + s * 0.55, cy + s * 0.15, s * 0.28, s * 0.38, 0.42, '#2f7fb8', '#8fd4ee');
-    gem(cx, cy, s * 0.36, s * 0.62, 0, '#57b8e0', '#c8f0fb');
-}
-
-/* Cartridge label with clickable publication rows, rebuilt after real
-   GBC stickers: top Game Boy Color banner, metallic foil art with an
-   emblem behind a Pokémon-logo-style wordmark, edition ribbon, entries
-   on dark plates, bottom strip with a seal. `style` picks the colorway
-   ('gold' or 'crystal'). Rows with an href get a ">" affordance, a
-   hover highlight and a raycast hotspot. */
+/* Cartridge label with clickable publication rows. Deliberately clean
+   and flat for readability: slim Game Boy Color banner, calm gold or
+   crystal field, one big outlined wordmark with the side line under
+   it, entries on dark plates. `style` picks the colorway ('gold' or
+   'crystal'). Rows with an href get a ">" affordance, a hover
+   highlight and a raycast hotspot. */
 function makeCartLabel(side, entries, style) {
     let hoverIdx = -1;
-    const rowTop = (i) => 0.54 + i * 0.20; // row baseline, as fraction of label height
+    const rowTop = (i) => 0.53 + i * 0.215; // row baseline, as fraction of label height
     const gold = style === 'gold';
 
     const mesh = makePrint(2.6, 2.1, (ctx, w, h) => {
         const P = (s) => `${s}px "Press Start 2P", monospace`;
 
-        // sticker base with margins for the vertical print
+        // sticker base
         ctx.fillStyle = '#ddd6ce';
         ctx.beginPath();
         ctx.roundRect(0, 0, w, h, w * 0.02);
         ctx.fill();
 
-        // metallic foil art field
-        const fx = w * 0.085, fy = h * 0.045, fw = w * 0.83, fh = h * 0.87;
-        const foil = ctx.createLinearGradient(0, fy, 0, fy + fh);
+        // flat, calm art field
+        const fx = w * 0.045, fy = h * 0.045, fw = w * 0.91, fh = h * 0.875;
+        const field = ctx.createLinearGradient(0, fy, 0, fy + fh);
         if (gold) {
-            foil.addColorStop(0, '#f6dd7a');
-            foil.addColorStop(0.45, '#dca832');
-            foil.addColorStop(1, '#8a5a14');
+            field.addColorStop(0, '#f0cd5e');
+            field.addColorStop(1, '#d99b28');
         } else {
-            foil.addColorStop(0, '#b8ecf4');
-            foil.addColorStop(0.45, '#3f9ecf');
-            foil.addColorStop(1, '#173f74');
+            field.addColorStop(0, '#7fc4e0');
+            field.addColorStop(1, '#2a6ba8');
         }
-        ctx.fillStyle = foil;
+        ctx.fillStyle = field;
         ctx.fillRect(fx, fy, fw, fh);
-
-        // diagonal foil shine
-        ctx.fillStyle = gold ? 'rgba(255, 248, 214, 0.25)' : 'rgba(240, 252, 255, 0.16)';
-        [[0.10, 0.14], [0.52, 0.20], [0.84, 0.08]].forEach(([a, ww]) => {
-            ctx.beginPath();
-            ctx.moveTo(fx + fw * a, fy);
-            ctx.lineTo(fx + fw * (a + ww), fy);
-            ctx.lineTo(fx + fw * (a + ww - 0.10), fy + fh);
-            ctx.lineTo(fx + fw * (a - 0.10), fy + fh);
-            ctx.closePath();
-            ctx.fill();
-        });
 
         // top banner, like the Game Boy Color strip on real labels
         const bh = fh * 0.085;
@@ -1036,144 +997,74 @@ function makeCartLabel(side, entries, style) {
             bx += ctx.measureText(t).width;
         });
 
-        // emblem art, peeking out from behind the wordmark
+        // clean title block: eyebrow, flat outlined wordmark, side line
         const vpx = fx + fw / 2;
-        if (gold) firebird(ctx, vpx, fy + fh * 0.285, fw * 0.30);
-        else gems(ctx, vpx, fy + fh * 0.28, fw * 0.26);
-
-        // wordmark: eyebrow + big Pokémon-logo-style PAPERS
         ctx.textAlign = 'center';
-        ctx.fillStyle = gold ? '#5a3808' : '#0e2448';
-        ctx.font = P(h * 0.036);
-        ctx.fillText('CARUGO', vpx, fy + fh * 0.155);
+        ctx.fillStyle = gold ? '#5a3808' : '#eaf6fc';
+        ctx.font = P(h * 0.034);
+        ctx.fillText('CARUGO', vpx, fy + fh * 0.165);
         const ly = fy + fh * 0.275;
-        ctx.font = P(h * 0.115);
+        ctx.font = P(h * 0.105);
         ctx.lineJoin = 'round';
-        ctx.lineWidth = h * 0.036;
-        ctx.strokeStyle = '#1c2a54';
+        ctx.lineWidth = h * 0.022;
+        ctx.strokeStyle = gold ? '#f8ecc0' : '#0e2448';
         ctx.strokeText('PAPERS', vpx, ly);
-        ctx.lineWidth = h * 0.014;
-        ctx.strokeStyle = gold ? '#8a4a10' : '#2f7fb8';
-        ctx.strokeText('PAPERS', vpx, ly);
-        const lg = ctx.createLinearGradient(0, ly - h * 0.06, 0, ly + h * 0.06);
-        if (gold) {
-            lg.addColorStop(0, '#fff0a0');
-            lg.addColorStop(0.55, '#f0c030');
-            lg.addColorStop(1, '#d08018');
-        } else {
-            lg.addColorStop(0, '#ffffff');
-            lg.addColorStop(0.55, '#c8ecfa');
-            lg.addColorStop(1, '#7fc4e8');
-        }
-        ctx.fillStyle = lg;
+        ctx.fillStyle = gold ? '#1c2a54' : '#fbfbf8';
         ctx.fillText('PAPERS', vpx, ly);
-
-        // edition ribbon
-        const et = gold ? 'GOLD EDITION' : 'CRYSTAL EDITION';
         ctx.font = P(h * 0.030);
-        const ew = ctx.measureText(et).width + h * 0.07;
-        const ey = fy + fh * 0.405;
-        ctx.fillStyle = gold ? '#a02020' : '#14337a';
-        ctx.beginPath();
-        ctx.roundRect(vpx - ew / 2, ey - h * 0.033, ew, h * 0.066, h * 0.033);
-        ctx.fill();
-        ctx.strokeStyle = gold ? '#fff3c8' : '#c8f0fb';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.fillStyle = '#fbfbf8';
-        ctx.fillText(et, vpx, ey + 1);
+        ctx.fillStyle = gold ? '#8a1c14' : '#ffd24a';
+        ctx.fillText(side, vpx, fy + fh * 0.385);
 
-        // sparkles where the foil catches the light
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        [[0.10, 0.16], [0.90, 0.14], [0.13, 0.38], [0.88, 0.40]].forEach(([x, y]) => {
-            const s = fw * 0.013;
-            ctx.fillRect(fx + fw * x - s / 2, fy + fh * y - s * 1.5, s, s * 3);
-            ctx.fillRect(fx + fw * x - s * 1.5, fy + fh * y - s / 2, s * 3, s);
-        });
-
-        // entry rows on dark plates, GBC-menu style
+        // entry rows on dark plates — plain year, big title, venue
         entries.forEach((e, i) => {
             const y = h * rowTop(i);
             const px = fx + fw * 0.03, pw = fw * 0.94;
             ctx.fillStyle = i === hoverIdx && e.href
-                ? (gold ? 'rgba(74, 42, 10, 0.88)' : 'rgba(12, 40, 84, 0.88)')
-                : (gold ? 'rgba(40, 22, 4, 0.72)' : 'rgba(6, 20, 44, 0.70)');
+                ? (gold ? 'rgba(66, 38, 8, 0.92)' : 'rgba(10, 32, 66, 0.92)')
+                : (gold ? 'rgba(44, 26, 6, 0.78)' : 'rgba(8, 22, 46, 0.75)');
             ctx.beginPath();
-            ctx.roundRect(px, y - h * 0.066, pw, h * 0.168, 12);
+            ctx.roundRect(px, y - h * 0.070, pw, h * 0.178, 14);
             ctx.fill();
             if (i === hoverIdx && e.href) {
                 ctx.strokeStyle = gold ? '#f8e080' : '#7fd8f0';
                 ctx.lineWidth = 3;
                 ctx.stroke();
             }
-            // year chip
-            ctx.font = P(h * 0.032);
-            const yw = ctx.measureText(e.year).width + h * 0.045;
-            ctx.fillStyle = gold ? '#f0c030' : '#9fe2f5';
-            ctx.beginPath();
-            ctx.roundRect(px + fw * 0.025, y - h * 0.031, yw, h * 0.062, 8);
-            ctx.fill();
             ctx.textAlign = 'left';
-            ctx.fillStyle = gold ? '#3a2404' : '#0e2448';
-            ctx.fillText(e.year, px + fw * 0.025 + h * 0.022, y + 1);
+            ctx.fillStyle = gold ? '#f0c030' : '#9fe2f5';
+            ctx.font = P(h * 0.038);
+            ctx.fillText(e.year, px + fw * 0.035, y);
             // auto-shrink the title into its centred column
-            let titleSize = h * 0.046;
+            let titleSize = h * 0.048;
             ctx.font = P(titleSize);
-            while (ctx.measureText(e.title).width > fw * 0.50 && titleSize > h * 0.026) {
+            while (ctx.measureText(e.title).width > fw * 0.52 && titleSize > h * 0.026) {
                 titleSize -= 1;
                 ctx.font = P(titleSize);
             }
             ctx.textAlign = 'center';
             ctx.fillStyle = '#fdf6e0';
-            ctx.fillText(e.title, fx + fw * 0.56, y - h * 0.008);
-            let venueSize = h * 0.029;
+            ctx.fillText(e.title, fx + fw * 0.56, y - h * 0.010);
+            let venueSize = h * 0.030;
             ctx.font = P(venueSize);
             while (ctx.measureText(e.venue).width > fw * 0.70 && venueSize > h * 0.018) {
                 venueSize -= 1;
                 ctx.font = P(venueSize);
             }
             ctx.fillStyle = gold ? '#d8c48a' : '#a8cfe4';
-            ctx.fillText(e.venue, fx + fw * 0.56, y + h * 0.056);
+            ctx.fillText(e.venue, fx + fw * 0.56, y + h * 0.058);
             if (e.href) {
                 ctx.textAlign = 'right';
                 ctx.fillStyle = gold ? '#f8e080' : '#7fd8f0';
-                ctx.font = P(h * 0.050);
-                ctx.fillText('>', px + pw - fw * 0.025, y);
+                ctx.font = P(h * 0.052);
+                ctx.fillText('>', px + pw - fw * 0.03, y);
             }
         });
 
-        // bottom strip with the side line and a little gold seal
-        const sh = fh * 0.075;
-        ctx.fillStyle = '#101018';
-        ctx.fillRect(fx, fy + fh - sh, fw, sh);
+        // quiet base-margin footer
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#d8d2cb';
-        ctx.font = P(h * 0.026);
-        ctx.fillText(side, vpx, fy + fh - sh / 2 + 1);
-        ctx.fillStyle = '#f0c030';
-        ctx.beginPath();
-        ctx.arc(fx + fw - sh * 1.0, fy + fh - sh / 2, sh * 0.30, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#101018';
-        ctx.font = `700 ${sh * 0.34}px 'Instrument Sans', sans-serif`;
-        ctx.fillText('UC', fx + fw - sh * 1.0, fy + fh - sh / 2 + 1);
-        ctx.font = P(h * 0.026);
-
-        // sticker margins: vertical print, reading bottom-to-top
-        ctx.fillStyle = '#7d766f';
-        ctx.font = P(h * 0.024);
-        ctx.save();
-        ctx.translate(w * 0.0425, h * 0.5);
-        ctx.rotate(-Math.PI / 2);
-        ctx.fillText('DWG. UC-ITA', 0, 0);
-        ctx.restore();
-        ctx.save();
-        ctx.translate(w * 0.958, h * 0.5);
-        ctx.rotate(-Math.PI / 2);
-        ctx.fillText('THIS SIDE OUT', 0, 0);
-        ctx.restore();
-        ctx.textAlign = 'center';
-        ctx.fillText('MADE IN ITALY', w / 2, h * 0.962);
+        ctx.fillStyle = '#8a8078';
+        ctx.font = P(h * 0.022);
+        ctx.fillText('MADE IN ITALY', w / 2, h * 0.965);
     }, 300);
 
     return {
@@ -1183,7 +1074,7 @@ function makeCartLabel(side, entries, style) {
             for (let i = 0; i < entries.length; i++) {
                 if (!entries[i].href) continue;
                 const top = rowTop(i);
-                if (cy >= top - 0.07 && cy <= top + 0.12) {
+                if (cy >= top - 0.08 && cy <= top + 0.115) {
                     return { index: i, action: { type: 'link', href: entries[i].href } };
                 }
             }
@@ -1499,24 +1390,6 @@ function buildGameBoy(screenTexture) {
         brand.position.set(0, 3.02, z);
         if (flip) brand.rotation.y = Math.PI;
         cartridge.add(brand);
-    }
-
-    // moulded arrow below the label, pointing at the slot
-    for (const [z, flip] of [[-0.593, false], [-1.107, true]]) {
-        const arrow = makePrint(0.44, 0.32, (ctx, w, h) => {
-            ctx.strokeStyle = '#54418f';
-            ctx.lineWidth = h * 0.1;
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            ctx.moveTo(w * 0.16, h * 0.16);
-            ctx.lineTo(w * 0.84, h * 0.16);
-            ctx.lineTo(w * 0.5, h * 0.86);
-            ctx.closePath();
-            ctx.stroke();
-        });
-        arrow.position.set(0, 0.42, z);
-        if (flip) arrow.rotation.y = Math.PI;
-        cartridge.add(arrow);
     }
 
     // side A (faces away from the console): the journal articles, gold foil
