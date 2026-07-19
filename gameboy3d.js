@@ -981,29 +981,15 @@ function makeCartLabel(side, entries, style) {
         ctx.fillStyle = field;
         ctx.fillRect(fx, fy, fw, fh);
 
-        // top banner, like the Game Boy Color strip on real labels
-        const bh = fh * 0.085;
-        ctx.fillStyle = '#101018';
-        ctx.fillRect(fx, fy, fw, bh);
-        ctx.textBaseline = 'middle';
-        ctx.font = `italic 700 ${bh * 0.52}px 'Instrument Sans', sans-serif`;
-        const segs = [['Carugo GAME BOY ', '#d8d2cb'],
-            ['C', '#b06ac0'], ['O', '#4098e0'], ['L', '#58b858'], ['O', '#e8c030'], ['R', '#e05048']];
-        let bx = fx + fw / 2 - segs.reduce((a, [t]) => a + ctx.measureText(t).width, 0) / 2;
-        ctx.textAlign = 'left';
-        segs.forEach(([t, c]) => {
-            ctx.fillStyle = c;
-            ctx.fillText(t, bx, fy + bh * 0.56);
-            bx += ctx.measureText(t).width;
-        });
-
         // clean title block: eyebrow, flat outlined wordmark, side line
+        // (the shell's moulded band already says "Carugo GAME BOY COLOR")
         const vpx = fx + fw / 2;
+        ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
         ctx.fillStyle = gold ? '#5a3808' : '#eaf6fc';
         ctx.font = P(h * 0.034);
-        ctx.fillText('CARUGO', vpx, fy + fh * 0.165);
-        const ly = fy + fh * 0.275;
+        ctx.fillText('CARUGO', vpx, fy + fh * 0.135);
+        const ly = fy + fh * 0.255;
         ctx.font = P(h * 0.105);
         ctx.lineJoin = 'round';
         ctx.lineWidth = h * 0.022;
@@ -1013,7 +999,7 @@ function makeCartLabel(side, entries, style) {
         ctx.fillText('PAPERS', vpx, ly);
         ctx.font = P(h * 0.030);
         ctx.fillStyle = gold ? '#8a1c14' : '#ffd24a';
-        ctx.fillText(side, vpx, fy + fh * 0.385);
+        ctx.fillText(side, vpx, fy + fh * 0.375);
 
         // entry rows on dark plates — plain year, big title, venue
         entries.forEach((e, i) => {
